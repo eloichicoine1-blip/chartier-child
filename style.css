@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.2.3
+Version:      0.3.1
 Text Domain:  chartier-child
 */
 
@@ -331,6 +331,7 @@ button.alt:hover {
 
 /* Bouton secondaire : « Lire la suite » des produits épuisés, « Voir le panier » */
 .button.product_type_simple:not(.add_to_cart_button),
+ul.products li.product.outofstock .button,
 .added_to_cart {
   border-color: var(--color-border-strong);
   border-radius: var(--radius-pill);
@@ -339,6 +340,7 @@ button.alt:hover {
 }
 
 .button.product_type_simple:not(.add_to_cart_button):hover,
+ul.products li.product.outofstock .button:hover,
 .added_to_cart:hover {
   background-color: var(--color-dark);
   color: var(--color-on-primary);
@@ -1058,13 +1060,6 @@ ul.products li.product .product-badge--soldout {
   margin: 0;
 }
 
-.single-product div.product form.cart .quantity .qty {
-  width: 5rem;
-  min-height: var(--touch-target);
-  border-radius: var(--radius-pill);
-  text-align: center;
-  font-weight: 600;
-}
 
 .single-product div.product form.cart .single_add_to_cart_button {
   flex-grow: 1;
@@ -1309,4 +1304,225 @@ ul.products li.product .product-badge--soldout {
 
 .storefront-handheld-footer-bar ul li.search .site-search {
   background-color: var(--color-dark);
+}
+
+
+/* =========================================================
+   16. Produits à options (IT-3)
+   ========================================================= */
+
+/* Le formulaire à options n'est pas sur une seule ligne :
+   listes d'abord, puis quantité + bouton. */
+.single-product div.product form.variations_form {
+  display: block;
+}
+
+/* Listes d'options : libellé au-dessus, deux colonnes en desktop */
+.single-product div.product table.variations {
+  width: 100%;
+  margin: 0 0 var(--space-l);
+  border: 0;
+}
+
+.single-product div.product table.variations tbody {
+  display: grid;
+  gap: var(--space-l);
+}
+
+@media (min-width: 768px) {
+  .single-product div.product table.variations tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.single-product div.product table.variations tr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.single-product div.product table.variations th,
+.single-product div.product table.variations td {
+  display: block;
+  padding: 0;
+  background: none;
+  text-align: left;
+}
+
+.single-product div.product table.variations th label {
+  margin: 0;
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+  font-weight: 600;
+}
+
+/* Liste déroulante du Design System (.select) */
+.single-product div.product table.variations select {
+  width: 100%;
+  min-height: 2.875rem;
+  margin: 0;
+  padding: 0 var(--space-3xl) 0 var(--space-m);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-field);
+  background-color: var(--color-background);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23111111' stroke-width='2'/%3E%3C/svg%3E");
+  background-position: right var(--space-m) center;
+  background-repeat: no-repeat;
+  color: var(--color-text-muted);
+  appearance: none;
+  cursor: pointer;
+}
+
+/* Option choisie : bordure noire et texte foncé (état « Selected » de Figma) */
+.single-product div.product table.variations select:not(:has(option[value='']:checked)) {
+  border: 2px solid var(--color-border-strong);
+  color: var(--color-text);
+}
+
+/* Option manquante au clic sur « Ajouter au panier » */
+.single-product div.product table.variations select.is-missing {
+  border: 2px solid var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+/* Lien « Effacer » discret */
+.single-product div.product .reset_variations {
+  display: inline-block;
+  margin-top: var(--space-s);
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+}
+
+/* Message « options manquantes » (.notice--error du Design System) */
+.options-notice {
+  margin: 0 0 var(--space-l);
+  padding: var(--space-m) var(--space-l);
+  border-left: 4px solid var(--color-error);
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+/* Prix et disponibilité de l'option choisie (US-3.3) */
+.single-product div.product .woocommerce-variation {
+  margin-bottom: var(--space-l);
+}
+
+.single-product div.product .woocommerce-variation-price .price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-s);
+  margin: 0 0 var(--space-s);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 600;
+}
+
+/* Quantité + bouton sur une ligne */
+.single-product div.product .woocommerce-variation-add-to-cart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-m);
+}
+
+.single-product div.product .woocommerce-variation-add-to-cart .quantity {
+  float: none;
+  margin: 0;
+}
+
+.single-product div.product .woocommerce-variation-add-to-cart .single_add_to_cart_button {
+  flex-grow: 1;
+  float: none;
+}
+
+/* Tant qu'il manque une option, le bouton reste rouge : le clic affiche le message d'erreur */
+.single-product div.product .single_add_to_cart_button.disabled,
+.single-product div.product .single_add_to_cart_button.disabled:hover {
+  opacity: 1;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  cursor: pointer;
+}
+
+/* « Dès » devant le prix des produits à options */
+.price-from {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  font-weight: 400;
+}
+
+
+/* =========================================================
+   17. Sélecteur de quantité « − 1 + » (.quantity du Design System)
+   Les boutons sont ajoutés en PHP autour du champ de WooCommerce.
+   ========================================================= */
+.quantity {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-background);
+}
+
+.quantity:focus-within {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.single-product div.product form.cart .quantity .qty,
+.quantity .qty {
+  width: 2.5rem;
+  min-height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: var(--text-price-size);
+  font-weight: 600;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.quantity .qty:focus {
+  outline: none;
+}
+
+/* Flèches natives du champ nombre masquées : on a nos boutons */
+.quantity .qty::-webkit-inner-spin-button,
+.quantity .qty::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.quantity .quantity__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  min-height: var(--touch-target);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: var(--text-price-size);
+  font-weight: 400;
+}
+
+.quantity .quantity__button:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* Produit vendu à l'unité : WooCommerce cache le champ, on cache aussi les boutons */
+.quantity:has(input[type='hidden']) {
+  border: 0;
+}
+
+.quantity:has(input[type='hidden']) .quantity__button {
+  display: none;
 }

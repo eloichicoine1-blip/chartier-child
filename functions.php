@@ -9,6 +9,8 @@
  * 4. Pied de page (US-2.1)
  * 5. Boutique : onglets de catégories, badges, cartes produit (US-2.3)
  * 6. Fiche produit simple (US-2.4)
+ * 7. Produits à options (IT-3)
+ * 8. Sélecteur de quantité « − 1 + »
  *
  * @package chartier-child
  */
@@ -331,3 +333,71 @@ function chartier_pickup_reminder() {
 	echo '<p class="product-pickup">Retrait dans l\'un de nos 3 bouillons</p>';
 }
 add_action( 'woocommerce_product_meta_end', 'chartier_pickup_reminder' );
+
+
+/* =========================================================
+   7. Produits à options (IT-3)
+   ========================================================= */
+
+/** Script du message « options manquantes » (fiches produit uniquement). */
+function chartier_enqueue_product_options_script() {
+	$version = wp_get_theme()->get( 'Version' );
+
+	if ( is_product() ) {
+		wp_enqueue_script( 'chartier-options-produit', get_stylesheet_directory_uri() . '/assets/js/options-produit.js', array(), $version, true );
+	}
+	if ( is_product() || is_cart() ) {
+		wp_enqueue_script( 'chartier-quantite', get_stylesheet_directory_uri() . '/assets/js/quantite.js', array(), $version, true );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_enqueue_product_options_script' );
+
+/**
+ * Prix d'un produit à options : « Dès 11,90 € » au lieu de la fourchette « 11,90 € – 12,40 € »,
+ * avec l'ancien prix barré si le produit est en promo (comme la carte produit de la maquette).
+ * Le prix exact s'affiche dès que les options sont choisies (US-3.3).
+ */
+function chartier_variable_price_html( $price, $product ) {
+	$min = $product->get_variation_price( 'min', true );
+	$max = $product->get_variation_price( 'max', true );
+
+	if ( $min === $max ) {
+		return $price;
+	}
+
+	$regular_min = $product->get_variation_regular_price( 'min', true );
+	$amount      = ( $product->is_on_sale() && $regular_min > $min )
+		? wc_format_sale_price( $regular_min, $min )
+		: wc_price( $min );
+
+	return '<span class="price-from">Dès</span> ' . $amount;
+}
+add_filter( 'woocommerce_variable_price_html', 'chartier_variable_price_html', 10, 2 );
+
+/** Bouton des cartes produit à options : libellé de la maquette. */
+function chartier_loop_add_to_cart_text( $text, $product ) {
+	if ( $product->is_type( 'variable' ) && $product->is_in_stock() ) {
+		return 'Choix des options';
+	}
+	return $text;
+}
+add_filter( 'woocommerce_product_add_to_cart_text', 'chartier_loop_add_to_cart_text', 10, 2 );
+
+
+/* =========================================================
+   8. Sélecteur de quantité « − 1 + » (composant Quantity de la maquette)
+   WooCommerce prévoit deux crochets autour du champ quantité :
+   on y place les boutons, le script quantite.js les fait fonctionner.
+   ========================================================= */
+function chartier_quantity_minus_button() {
+	echo '<button type="button" class="quantity__button quantity__button--minus" aria-label="Retirer un">−</button>';
+}
+add_action( 'woocommerce_before_quantity_input_field', 'chartier_quantity_minus_button' );
+
+function chartier_quantity_plus_button() {
+	echo '<button type="button" class="quantity__button quantity__button--plus" aria-label="Ajouter un">+</button>';
+}
+add_action( 'woocommerce_after_quantity_input_field', 'chartier_quantity_plus_button' );
+
+/** Barre « Ajouter au panier » collante de Storefront désactivée (non prévue dans la maquette desktop). */
+add_filter( 'theme_mod_storefront_sticky_add_to_cart', '__return_false' );
