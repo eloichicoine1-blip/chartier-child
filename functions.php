@@ -1,22 +1,333 @@
 <?php
 /**
  * Thème enfant Chartier (Storefront).
- * Storefront charge déjà style.css du thème enfant.
+ *
+ * Sommaire
+ * 1. Styles et scripts
+ * 2. Nettoyage de Storefront (CSS du Customizer, sidebar)
+ * 3. En-tête (US-2.1)
+ * 4. Pied de page (US-2.1)
+ * 5. Boutique : onglets de catégories, badges, cartes produit (US-2.3)
+ * 6. Fiche produit simple (US-2.4)
  *
  * @package chartier-child
  */
 
 defined( 'ABSPATH' ) || exit;
 
-/**
- * Polices de la charte : Poppins (textes) et Gloock (titres).
- */
-function chartier_enqueue_fonts() {
+
+/* =========================================================
+   1. Styles et scripts
+   Storefront charge déjà le style.css du thème enfant
+   (versionné avec le numéro « Version » de son en-tête).
+   ========================================================= */
+function chartier_enqueue_assets() {
+	// Polices de la charte : Gloock (titres) et Poppins (textes).
 	wp_enqueue_style(
 		'chartier-fonts',
-		'https://fonts.googleapis.com/css2?family=Gloock&family=Poppins:wght@400;500;600;700&display=swap',
+		'https://fonts.googleapis.com/css2?family=Gloock&family=Poppins:wght@400;600;700&display=swap',
 		array(),
 		null
 	);
+
+	// Mise à jour du total et du compteur du panier sans recharger la page.
+	if ( class_exists( 'WooCommerce' ) ) {
+		wp_enqueue_script( 'wc-cart-fragments' );
+	}
 }
-add_action( 'wp_enqueue_scripts', 'chartier_enqueue_fonts' );
+add_action( 'wp_enqueue_scripts', 'chartier_enqueue_assets' );
+
+
+/* =========================================================
+   2. Nettoyage de Storefront
+   ========================================================= */
+
+/**
+ * Retire le CSS généré par le Customizer de Storefront (couleurs grises par défaut) :
+ * nos couleurs viennent uniquement des variables du Design System (style.css).
+ */
+function chartier_remove_storefront_customizer_css() {
+	global $storefront;
+
+	if ( empty( $storefront ) ) {
+		return;
+	}
+
+	if ( isset( $storefront->customizer ) ) {
+		remove_action( 'wp_enqueue_scripts', array( $storefront->customizer, 'add_customizer_css' ), 130 );
+	}
+	if ( isset( $storefront->woocommerce_customizer ) ) {
+		remove_action( 'wp_enqueue_scripts', array( $storefront->woocommerce_customizer, 'add_customizer_css' ), 130 );
+	}
+	if ( isset( $storefront->woocommerce ) ) {
+		remove_action( 'wp_enqueue_scripts', array( $storefront->woocommerce, 'add_customizer_css' ), 140 );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_remove_storefront_customizer_css', 1 );
+
+/**
+ * Pages WooCommerce en pleine largeur à l'IT-2.
+ * La colonne de filtres de la maquette arrivera avec l'IT-18.
+ */
+function chartier_full_width_body_class( $classes ) {
+	if ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+		$classes[] = 'storefront-full-width-content';
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'chartier_full_width_body_class' );
+
+function chartier_remove_shop_sidebar() {
+	if ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+		remove_action( 'storefront_sidebar', 'storefront_get_sidebar', 10 );
+	}
+}
+add_action( 'wp', 'chartier_remove_shop_sidebar' );
+
+
+/* =========================================================
+   3. En-tête
+   On garde le menu de Storefront (et son bouton burger accessible),
+   mais on remplace la mise en page par celle de la maquette.
+   Les remove_action se font sur « init » : le functions.php du thème
+   enfant est chargé AVANT celui de Storefront.
+   ========================================================= */
+function chartier_replace_storefront_header() {
+	remove_action( 'storefront_header', 'storefront_header_container', 0 );
+	remove_action( 'storefront_header', 'storefront_site_branding', 20 );
+	remove_action( 'storefront_header', 'storefront_secondary_navigation', 30 );
+	remove_action( 'storefront_header', 'storefront_product_search', 40 );
+	remove_action( 'storefront_header', 'storefront_header_container_close', 41 );
+	remove_action( 'storefront_header', 'storefront_primary_navigation_wrapper', 42 );
+	remove_action( 'storefront_header', 'storefront_primary_navigation', 50 );
+	remove_action( 'storefront_header', 'storefront_header_cart', 60 );
+	remove_action( 'storefront_header', 'storefront_primary_navigation_wrapper_close', 68 );
+
+	add_action( 'storefront_header', 'chartier_header', 10 );
+}
+add_action( 'init', 'chartier_replace_storefront_header' );
+
+/**
+ * Contenu de l'en-tête : bandeau, logo, menu, recherche, panier.
+ */
+function chartier_header() {
+	$logo = get_stylesheet_directory_uri() . '/assets/img/logo-bouillon-chartier-rouge.svg';
+	?>
+	<p class="header__band">Commandez en ligne, retirez au comptoir sans faire la queue</p>
+	<div class="header__bar">
+		<a class="header__logo" href="<?php echo esc_url( home_url( '/' ) ); ?>" rel="home">
+			<img class="header__logo-image" src="<?php echo esc_url( $logo ); ?>" alt="Bouillon Chartier, retour à l'accueil" width="230" height="72">
+		</a>
+
+		<?php storefront_primary_navigation(); ?>
+
+		<div class="header__actions">
+			<form class="header__search" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
+				<label class="screen-reader-text" for="header-search-field">Rechercher un plat</label>
+				<input class="header__search-field" id="header-search-field" type="search" name="s" placeholder="Rechercher un plat…" value="<?php echo esc_attr( get_search_query() ); ?>">
+				<input type="hidden" name="post_type" value="product">
+			</form>
+			<?php chartier_header_cart(); ?>
+		</div>
+	</div>
+	<?php
+}
+
+/**
+ * Total et compteur du panier (aussi utilisé pour la mise à jour en AJAX).
+ */
+function chartier_header_cart() {
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return;
+	}
+	$count = WC()->cart->get_cart_contents_count();
+	?>
+	<a class="header__cart" href="<?php echo esc_url( wc_get_cart_url() ); ?>">
+		<span class="header__cart-total"><?php echo wp_kses_post( WC()->cart->get_cart_subtotal() ); ?></span>
+		<span class="header__cart-count" aria-label="<?php echo esc_attr( sprintf( _n( '%d article dans le panier', '%d articles dans le panier', $count, 'chartier-child' ), $count ) ); ?>"><?php echo esc_html( $count ); ?></span>
+	</a>
+	<?php
+}
+
+function chartier_header_cart_fragment( $fragments ) {
+	ob_start();
+	chartier_header_cart();
+	$fragments['a.header__cart'] = ob_get_clean();
+	return $fragments;
+}
+add_filter( 'woocommerce_add_to_cart_fragments', 'chartier_header_cart_fragment' );
+
+
+/* =========================================================
+   4. Pied de page
+   ========================================================= */
+function chartier_replace_storefront_footer() {
+	remove_action( 'storefront_footer', 'storefront_footer_widgets', 10 );
+	remove_action( 'storefront_footer', 'storefront_credit', 20 );
+	add_action( 'storefront_footer', 'chartier_footer', 10 );
+}
+add_action( 'init', 'chartier_replace_storefront_footer' );
+
+/**
+ * Lien vers une page seulement si elle existe déjà
+ * (CGV et mentions légales arrivent à l'IT-22 : pas de lien mort d'ici là).
+ */
+function chartier_footer_page_link( $slug, $label ) {
+	$page = get_page_by_path( $slug );
+	if ( ! $page || 'publish' !== $page->post_status ) {
+		return;
+	}
+	printf( '<li><a class="footer__link" href="%s">%s</a></li>', esc_url( get_permalink( $page ) ), esc_html( $label ) );
+}
+
+function chartier_footer() {
+	$logo = get_stylesheet_directory_uri() . '/assets/img/logo-bouillon-chartier-blanc.svg';
+	?>
+	<div class="footer__columns">
+		<img class="footer__logo-image" src="<?php echo esc_url( $logo ); ?>" alt="Bouillon Chartier" width="230" height="72" loading="lazy">
+
+		<nav aria-labelledby="footer-commander">
+			<p class="footer__title" id="footer-commander">Commander</p>
+			<ul class="footer__list">
+				<li><a class="footer__link" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">La carte</a></li>
+				<li><a class="footer__link" href="<?php echo esc_url( wc_get_page_permalink( 'myaccount' ) ); ?>">Mon compte</a></li>
+				<li><a class="footer__link" href="<?php echo esc_url( wc_get_cart_url() ); ?>">Mon panier</a></li>
+			</ul>
+		</nav>
+
+		<nav aria-labelledby="footer-informations">
+			<p class="footer__title" id="footer-informations">Informations</p>
+			<ul class="footer__list">
+				<?php
+				chartier_footer_page_link( 'cgv', 'CGV' );
+				chartier_footer_page_link( 'mentions-legales', 'Mentions légales' );
+				if ( get_privacy_policy_url() ) {
+					printf( '<li><a class="footer__link" href="%s">Confidentialité</a></li>', esc_url( get_privacy_policy_url() ) );
+				}
+				?>
+			</ul>
+		</nav>
+
+		<div>
+			<p class="footer__title">Nos bouillons</p>
+			<ul class="footer__list">
+				<li class="footer__text">Grands Boulevards</li>
+				<li class="footer__text">Montparnasse</li>
+				<li class="footer__text">Gare de l'Est</li>
+			</ul>
+		</div>
+	</div>
+	<p class="footer__credit">Site réalisé par Eloi Chicoine · SAé 3.01, BUT MMI Limoges · projet pédagogique, non affilié à Bouillon Chartier</p>
+	<?php
+}
+
+
+/* =========================================================
+   5. Boutique (US-2.3)
+   ========================================================= */
+
+/** Fil d'Ariane : « Accueil › La carte › Plats ». */
+function chartier_breadcrumb_defaults( $defaults ) {
+	$defaults['delimiter'] = '<span class="breadcrumb-separator" aria-hidden="true">›</span>';
+	$defaults['home']      = 'Accueil';
+	return $defaults;
+}
+add_filter( 'woocommerce_breadcrumb_defaults', 'chartier_breadcrumb_defaults', 20 );
+
+/** 3 produits par ligne. */
+function chartier_loop_columns() {
+	return 3;
+}
+add_filter( 'loop_shop_columns', 'chartier_loop_columns', 20 );
+
+/**
+ * Tuiles de catégories (Entrées / Plats / Desserts) sous le titre de la boutique,
+ * composant .category-tile du Design System.
+ */
+function chartier_category_tabs() {
+	if ( ! is_shop() && ! is_product_category() ) {
+		return;
+	}
+
+	$categories = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'exclude'    => get_option( 'default_product_cat' ), // « Non classé »
+			'orderby'    => 'menu_order', // ordre réglé par glisser-déposer dans Produits › Catégories
+		)
+	);
+
+	if ( empty( $categories ) || is_wp_error( $categories ) ) {
+		return;
+	}
+
+	$current = is_product_category() ? get_queried_object_id() : 0;
+
+	echo '<nav class="category-tiles" aria-label="Catégories de la carte">';
+
+	// Sur une catégorie : lien de retour vers toute la carte.
+	if ( $current ) {
+		printf(
+			'<a class="category-tiles__all" href="%s">← Toute la carte</a>',
+			esc_url( wc_get_page_permalink( 'shop' ) )
+		);
+	}
+
+	echo '<ul class="category-tiles__list">';
+	foreach ( $categories as $category ) {
+		$active = ( $current === $category->term_id );
+		printf(
+			'<li><a class="category-tile%s" href="%s"%s><span class="category-tile__count">%s</span><span class="category-tile__title">%s</span></a></li>',
+			$active ? ' category-tile--active' : '',
+			esc_url( get_term_link( $category ) ),
+			$active ? ' aria-current="page"' : '',
+			esc_html( sprintf( _n( '%d plat', '%d plats', $category->count, 'chartier-child' ), $category->count ) ),
+			esc_html( $category->name )
+		);
+	}
+	echo '</ul></nav>';
+}
+add_action( 'woocommerce_archive_description', 'chartier_category_tabs', 20 );
+
+/** Badge « Promo » au format du Design System. */
+function chartier_sale_flash() {
+	return '<span class="onsale badge badge--promo">Promo</span>';
+}
+add_filter( 'woocommerce_sale_flash', 'chartier_sale_flash' );
+
+/** Badge « Épuisé » sur les cartes des produits en rupture. */
+function chartier_soldout_badge() {
+	global $product;
+	if ( $product && ! $product->is_in_stock() ) {
+		echo '<span class="badge badge--soldout product-badge--soldout">Épuisé</span>';
+	}
+}
+add_action( 'woocommerce_before_shop_loop_item_title', 'chartier_soldout_badge', 9 );
+
+
+/* =========================================================
+   6. Fiche produit (US-2.4)
+   Ordre de la maquette : badge, titre, description courte,
+   prix, bouton, catégorie.
+   ========================================================= */
+function chartier_single_product_order() {
+	remove_action( 'woocommerce_before_single_product_summary', 'woocommerce_show_product_sale_flash', 10 );
+	add_action( 'woocommerce_single_product_summary', 'woocommerce_show_product_sale_flash', 4 );
+
+	remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 10 );
+	add_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_price', 25 );
+}
+add_action( 'init', 'chartier_single_product_order' );
+
+/** L'UGS (référence interne) n'est utile qu'en back-office. */
+function chartier_hide_sku_on_front( $enabled ) {
+	return is_admin() ? $enabled : false;
+}
+add_filter( 'wc_product_sku_enabled', 'chartier_hide_sku_on_front' );
+
+/** Rappel du mode de retrait sous la catégorie. */
+function chartier_pickup_reminder() {
+	echo '<p class="product-pickup">Retrait dans l\'un de nos 3 bouillons</p>';
+}
+add_action( 'woocommerce_product_meta_end', 'chartier_pickup_reminder' );

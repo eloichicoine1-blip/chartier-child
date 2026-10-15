@@ -4,8 +4,1309 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.1.0
+Version:      0.2.3
 Text Domain:  chartier-child
 */
 
-/* Les styles du projet arrivent à l'IT-2 (assets/css/). */
+/* =========================================================
+   Sommaire
+   1–2. Variables : copiées de la page Design System
+        (https://eloichicoine1-blip.github.io/chartier-design-system/),
+        elles-mêmes issues des variables Figma.
+   3–15. Styles du site : Storefront et WooCommerce
+        habillés avec les variables secondaires.
+   ========================================================= */
+
+/* =========================================================
+   1. Variables primaires
+   Même nom que la « code syntax » des variables Figma
+   (collection Chartier) : color/brand/red → --ch-color-brand-red.
+   Les px de Figma sont convertis en rem (16 px = 1 rem).
+   ========================================================= */
+:root {
+  /* Couleurs · marque */
+  --ch-color-brand-red: #C31729;
+  --ch-color-brand-red-hover: #A01222;
+  --ch-color-brand-red-logo: #D02E36;
+
+  /* Couleurs · neutres */
+  --ch-color-neutral-ink: #111111;
+  --ch-color-neutral-black: #000000;
+  --ch-color-neutral-white: #FFFFFF;
+  --ch-color-neutral-muted: #5E5557;
+  --ch-color-neutral-field: #9B9493;
+  --ch-color-neutral-line: #DDD6CC;
+  --ch-color-neutral-stone: #F2EFEC;
+  --ch-color-neutral-linen: #EDE7DC;
+
+  /* Couleurs · états */
+  --ch-color-state-success: #1F6B45;
+  --ch-color-state-success-bg: #E3F0E7;
+  --ch-color-state-error: #8F0F1C;
+  --ch-color-state-error-bg: #F6E1E3;
+
+  /* Espacements (space/1 → space/9) */
+  --ch-space-1: 0.25rem;  /*  4 px */
+  --ch-space-2: 0.5rem;   /*  8 px */
+  --ch-space-3: 0.75rem;  /* 12 px */
+  --ch-space-4: 1rem;     /* 16 px */
+  --ch-space-5: 1.5rem;   /* 24 px */
+  --ch-space-6: 2rem;     /* 32 px */
+  --ch-space-7: 3rem;     /* 48 px */
+  --ch-space-8: 4rem;     /* 64 px */
+  --ch-space-9: 6rem;     /* 96 px */
+
+  /* Rayons et tailles */
+  --ch-radius-sm: 0.375rem;      /*  6 px */
+  --ch-radius-coussin: 1.375rem; /* 22 px */
+  --ch-radius-pill: 999px;
+  --ch-size-touch: 2.75rem;      /* 44 px : zone cliquable minimale */
+
+  /* Typographie · familles */
+  --ch-typo-famille-titres: 'Gloock', Georgia, serif;
+  --ch-typo-famille-textes: 'Poppins', Arial, sans-serif;
+
+  /* Typographie · desktop (taille / interligne) */
+  --ch-typo-desktop-display-hero-taille: 4.5rem;
+  --ch-typo-desktop-display-hero-interligne: 4.75rem;
+  --ch-typo-desktop-display-l-taille: 3.5rem;
+  --ch-typo-desktop-display-l-interligne: 3.75rem;
+  --ch-typo-desktop-heading-h1-taille: 2.5rem;
+  --ch-typo-desktop-heading-h1-interligne: 2.75rem;
+  --ch-typo-desktop-heading-h2-taille: 2rem;
+  --ch-typo-desktop-heading-h2-interligne: 2.25rem;
+  --ch-typo-desktop-heading-h3-taille: 1.375rem;
+  --ch-typo-desktop-heading-h3-interligne: 1.75rem;
+  --ch-typo-desktop-body-m-taille: 1rem;
+  --ch-typo-desktop-body-m-interligne: 1.5rem;
+  --ch-typo-desktop-body-s-taille: 0.875rem;
+  --ch-typo-desktop-body-s-interligne: 1.25rem;
+  --ch-typo-desktop-label-taille: 0.75rem;
+  --ch-typo-desktop-label-interligne: 1rem;
+  --ch-typo-desktop-price-taille: 1.125rem;
+  --ch-typo-desktop-price-interligne: 1.5rem;
+  --ch-typo-desktop-button-taille: 0.9375rem;
+  --ch-typo-desktop-button-interligne: 1.25rem;
+
+  /* Typographie · mobile (taille / interligne) */
+  --ch-typo-mobile-display-l-taille: 2.5rem;
+  --ch-typo-mobile-display-l-interligne: 2.75rem;
+  --ch-typo-mobile-heading-h1-taille: 1.625rem;
+  --ch-typo-mobile-heading-h1-interligne: 1.875rem;
+  --ch-typo-mobile-heading-h2-taille: 1.5rem;
+  --ch-typo-mobile-heading-h2-interligne: 1.75rem;
+  --ch-typo-mobile-heading-h3-taille: 1.25rem;
+  --ch-typo-mobile-heading-h3-interligne: 1.625rem;
+  --ch-typo-mobile-body-m-taille: 0.9375rem;
+  --ch-typo-mobile-body-m-interligne: 1.375rem;
+  --ch-typo-mobile-body-s-taille: 0.8125rem;
+  --ch-typo-mobile-body-s-interligne: 1.1875rem;
+  --ch-typo-mobile-label-taille: 0.6875rem;
+  --ch-typo-mobile-label-interligne: 0.875rem;
+  --ch-typo-mobile-price-taille: 0.9375rem;
+  --ch-typo-mobile-price-interligne: 1.25rem;
+}
+
+
+/* =========================================================
+   2. Variables secondaires
+   Elles donnent un rôle aux valeurs primaires. Les composants
+   n'utilisent QUE celles-ci : changer un rôle ne touche qu'une ligne.
+   Mobile d'abord, puis bascule desktop à 48em (768 px).
+   ========================================================= */
+:root {
+  /* Couleurs */
+  --color-primary: var(--ch-color-brand-red);
+  --color-primary-hover: var(--ch-color-brand-red-hover);
+  --color-on-primary: var(--ch-color-neutral-white);
+  --color-text: var(--ch-color-neutral-ink);
+  --color-text-muted: var(--ch-color-neutral-muted);
+  --color-text-disabled: var(--ch-color-neutral-field);
+  --color-background: var(--ch-color-neutral-white);
+  --color-surface: var(--ch-color-neutral-stone);
+  --color-paper: var(--ch-color-neutral-linen);
+  --color-dark: var(--ch-color-neutral-ink);
+  --color-dark-hover: var(--ch-color-neutral-black);
+  --color-border: var(--ch-color-neutral-line);
+  --color-border-field: var(--ch-color-neutral-field);
+  --color-border-strong: var(--ch-color-neutral-ink);
+  --color-disabled: var(--ch-color-neutral-line);
+  --color-success: var(--ch-color-state-success);
+  --color-success-bg: var(--ch-color-state-success-bg);
+  --color-error: var(--ch-color-state-error);
+  --color-error-bg: var(--ch-color-state-error-bg);
+
+  /* Polices */
+  --font-heading: var(--ch-typo-famille-titres);
+  --font-body: var(--ch-typo-famille-textes);
+
+  /* Tailles de texte (mobile par défaut) */
+  --text-hero-size: var(--ch-typo-mobile-display-l-taille);
+  --text-hero-lh: var(--ch-typo-mobile-display-l-interligne);
+  --text-display-size: var(--ch-typo-mobile-display-l-taille);
+  --text-display-lh: var(--ch-typo-mobile-display-l-interligne);
+  --text-h1-size: var(--ch-typo-mobile-heading-h1-taille);
+  --text-h1-lh: var(--ch-typo-mobile-heading-h1-interligne);
+  --text-h2-size: var(--ch-typo-mobile-heading-h2-taille);
+  --text-h2-lh: var(--ch-typo-mobile-heading-h2-interligne);
+  --text-h3-size: var(--ch-typo-mobile-heading-h3-taille);
+  --text-h3-lh: var(--ch-typo-mobile-heading-h3-interligne);
+  --text-m-size: var(--ch-typo-mobile-body-m-taille);
+  --text-m-lh: var(--ch-typo-mobile-body-m-interligne);
+  --text-s-size: var(--ch-typo-mobile-body-s-taille);
+  --text-s-lh: var(--ch-typo-mobile-body-s-interligne);
+  --text-label-size: var(--ch-typo-mobile-label-taille);
+  --text-label-lh: var(--ch-typo-mobile-label-interligne);
+  --text-price-size: var(--ch-typo-mobile-price-taille);
+  --text-price-lh: var(--ch-typo-mobile-price-interligne);
+  --text-button-size: var(--ch-typo-desktop-button-taille);
+  --text-button-lh: var(--ch-typo-desktop-button-interligne);
+
+  /* Espacements */
+  --space-xs: var(--ch-space-1);
+  --space-s: var(--ch-space-2);
+  --space-m: var(--ch-space-3);
+  --space-l: var(--ch-space-4);
+  --space-xl: var(--ch-space-5);
+  --space-2xl: var(--ch-space-6);
+  --space-3xl: var(--ch-space-7);
+  --space-4xl: var(--ch-space-8);
+  --space-5xl: var(--ch-space-9);
+  --gutter: var(--ch-space-4);          /* marge latérale de page */
+  --section-gap: var(--ch-space-7);     /* espace entre sections */
+
+  /* Formes */
+  --radius-field: var(--ch-radius-sm);
+  --radius-card: var(--ch-radius-sm);
+  --radius-button: var(--ch-radius-coussin);
+  --radius-pill: var(--ch-radius-pill);
+  --touch-target: var(--ch-size-touch);
+  --focus-ring: 3px solid var(--color-text);
+
+  /* Largeur du contenu */
+  --container: 75rem; /* 1200 px */
+}
+
+@media (min-width: 48em) {
+  :root {
+    --text-hero-size: var(--ch-typo-desktop-display-hero-taille);
+    --text-hero-lh: var(--ch-typo-desktop-display-hero-interligne);
+    --text-display-size: var(--ch-typo-desktop-display-l-taille);
+    --text-display-lh: var(--ch-typo-desktop-display-l-interligne);
+    --text-h1-size: var(--ch-typo-desktop-heading-h1-taille);
+    --text-h1-lh: var(--ch-typo-desktop-heading-h1-interligne);
+    --text-h2-size: var(--ch-typo-desktop-heading-h2-taille);
+    --text-h2-lh: var(--ch-typo-desktop-heading-h2-interligne);
+    --text-h3-size: var(--ch-typo-desktop-heading-h3-taille);
+    --text-h3-lh: var(--ch-typo-desktop-heading-h3-interligne);
+    --text-m-size: var(--ch-typo-desktop-body-m-taille);
+    --text-m-lh: var(--ch-typo-desktop-body-m-interligne);
+    --text-s-size: var(--ch-typo-desktop-body-s-taille);
+    --text-s-lh: var(--ch-typo-desktop-body-s-interligne);
+    --text-label-size: var(--ch-typo-desktop-label-taille);
+    --text-label-lh: var(--ch-typo-desktop-label-interligne);
+    --text-price-size: var(--ch-typo-desktop-price-taille);
+    --text-price-lh: var(--ch-typo-desktop-price-interligne);
+    --gutter: var(--ch-space-6);
+    --section-gap: var(--ch-space-8);
+  }
+}
+
+
+
+/* =========================================================
+   3. Base (par-dessus le normalize de Storefront)
+   ========================================================= */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-m-size);
+  line-height: var(--text-m-lh);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+a {
+  color: var(--color-text);
+}
+
+a:hover {
+  color: var(--color-primary);
+}
+
+img {
+  border-radius: 0;
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Largeur du contenu : 1200 px comme la maquette */
+.col-full {
+  max-width: var(--container);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+  box-sizing: border-box;
+}
+
+@media (max-width: 66.4989378333em) {
+  .col-full {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+
+/* =========================================================
+   4. Boutons (WooCommerce + Storefront → .button du Design System)
+   ========================================================= */
+button,
+input[type='button'],
+input[type='reset'],
+input[type='submit'],
+.button,
+.button.alt,
+button.alt,
+.added_to_cart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  padding: var(--space-m) var(--space-xl);
+  border: 2px solid transparent;
+  border-radius: var(--radius-button);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-button-size);
+  line-height: var(--text-button-lh);
+  font-weight: 600;
+  text-decoration: none;
+  text-shadow: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+button:hover,
+input[type='button']:hover,
+input[type='reset']:hover,
+input[type='submit']:hover,
+.button:hover,
+.button.alt:hover,
+button.alt:hover,
+.added_to_cart:hover {
+  background-color: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+
+button:disabled,
+.button.disabled,
+.button:disabled {
+  background-color: var(--color-disabled);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* WooCommerce ajoute .alt au bouton « Ajouter au panier » : Storefront le met en gris foncé */
+.button.alt,
+button.alt {
+  border-color: transparent;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.button.alt:hover,
+button.alt:hover {
+  background-color: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+
+/* Bouton secondaire : « Lire la suite » des produits épuisés, « Voir le panier » */
+.button.product_type_simple:not(.add_to_cart_button),
+.added_to_cart {
+  border-color: var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.button.product_type_simple:not(.add_to_cart_button):hover,
+.added_to_cart:hover {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+
+/* =========================================================
+   5. Champs de formulaire
+   ========================================================= */
+input[type='text'],
+input[type='number'],
+input[type='email'],
+input[type='tel'],
+input[type='search'],
+input[type='password'],
+textarea,
+select {
+  min-height: 2.875rem;
+  padding: 0 var(--space-m);
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-field);
+  background-color: var(--color-background);
+  box-shadow: none;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-m-size);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-background);
+  outline: 1px solid var(--color-border-strong);
+}
+
+
+/* =========================================================
+   6. En-tête (.header, sortie par chartier_header())
+   ========================================================= */
+.site-header {
+  padding: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--color-border-strong);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.header__band {
+  margin: 0;
+  padding: var(--space-s) var(--space-l);
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Mobile : burger | logo | panier */
+.header__bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--space-m) var(--gutter);
+  box-sizing: border-box;
+}
+
+.header__logo {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.header__logo-image {
+  width: 7rem;
+  height: auto;
+}
+
+.site-header .main-navigation {
+  grid-column: 1;
+  grid-row: 1;
+  width: auto;
+  margin: 0;
+  clear: none;
+}
+
+.header__actions {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-l);
+}
+
+.header__search {
+  display: none;
+  margin: 0;
+}
+
+.header__search .header__search-field {
+  width: 12rem;
+  min-height: 2.5rem;
+  padding: 0 var(--space-l);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-s-size);
+}
+
+.header__cart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.header__cart-total {
+  display: none;
+}
+
+.header__cart-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 var(--space-m);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* Bouton burger de Storefront */
+.site-header button.menu-toggle {
+  float: none;
+  min-height: var(--touch-target);
+  margin: 0;
+  padding: 0 var(--space-m) 0 2.5rem;
+  border: 0;
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+}
+
+.site-header button.menu-toggle:hover {
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.site-header button.menu-toggle::before,
+.site-header button.menu-toggle::after,
+.site-header button.menu-toggle span::before {
+  background-color: var(--color-text);
+  width: 18px;
+}
+
+/* Menu mobile déplié : panneau sous la barre */
+.site-header .handheld-navigation {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: var(--color-background);
+}
+
+.site-header .main-navigation.toggled .handheld-navigation {
+  padding: var(--space-m) var(--gutter);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.site-header .handheld-navigation a {
+  display: block;
+  padding: var(--space-m) 0;
+  color: var(--color-text);
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+/* Desktop : logo | menu | recherche + panier */
+@media (min-width: 768px) {
+  .header__bar {
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-2xl);
+    padding-top: var(--space-xl);
+    padding-bottom: var(--space-xl);
+  }
+
+  .header__logo {
+    grid-column: 1;
+  }
+
+  .header__logo-image {
+    width: 10.625rem;
+  }
+
+  .site-header .main-navigation {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .site-header .main-navigation ul.menu {
+    display: flex;
+    gap: var(--space-2xl);
+    margin: 0;
+  }
+
+  .site-header .main-navigation ul.menu > li > a {
+    padding: var(--space-s) 0;
+    color: var(--color-text);
+    font-size: var(--text-label-size);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .site-header .main-navigation ul.menu > li > a:hover,
+  .site-header .main-navigation ul.menu > li.current-menu-item > a,
+  .site-header .main-navigation ul.menu > li.current_page_item > a {
+    color: var(--color-primary);
+  }
+
+  .header__cart-total {
+    display: inline;
+  }
+}
+
+@media (min-width: 1024px) {
+  .header__search {
+    display: block;
+  }
+}
+
+
+/* =========================================================
+   7. Fil d'Ariane
+   ========================================================= */
+.storefront-breadcrumb {
+  margin: 0;
+  padding: var(--space-xl) 0 0;
+}
+
+.woocommerce-breadcrumb {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+.woocommerce-breadcrumb a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.woocommerce-breadcrumb a:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+/* Storefront ajoute une icône maison : remplacée par le texte « Accueil » */
+.woocommerce-breadcrumb a:first-of-type::before {
+  display: none;
+}
+
+.woocommerce-breadcrumb .breadcrumb-separator {
+  padding: 0 var(--space-s);
+}
+
+
+/* =========================================================
+   8. Boutique : titre, onglets de catégories, tri
+   ========================================================= */
+.site-content {
+  padding-top: var(--space-xl);
+}
+
+.woocommerce-products-header {
+  margin-bottom: var(--space-xl);
+  padding: 0;
+}
+
+.woocommerce-products-header__title.page-title {
+  margin: 0 0 var(--space-m);
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: 400;
+}
+
+.term-description,
+.page-description {
+  max-width: 40rem;
+  color: var(--color-text-muted);
+}
+
+.term-description p:last-child,
+.page-description p:last-child {
+  margin-bottom: 0;
+}
+
+/* Tuiles Entrées / Plats / Desserts (.category-tile du Design System) */
+.category-tiles {
+  margin-top: var(--space-xl);
+}
+
+.category-tiles__all {
+  display: inline-block;
+  margin-bottom: var(--space-l);
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+  font-weight: 600;
+}
+
+.category-tiles__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-s);
+  margin: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .category-tiles__list {
+    gap: var(--space-xl);
+  }
+}
+
+.category-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-l);
+  height: 100%;
+  min-height: 6rem;
+  padding: var(--space-m);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+@media (min-width: 768px) {
+  .category-tile {
+    min-height: 12.5rem;
+    padding: var(--space-2xl);
+  }
+}
+
+.category-tile__count {
+  color: var(--color-text-muted);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.category-tile__title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+@media (min-width: 768px) {
+  .category-tile__title {
+    font-size: var(--text-display-size);
+    line-height: var(--text-display-lh);
+  }
+}
+
+.category-tile:hover,
+.category-tile--active {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+.category-tile:hover .category-tile__count,
+.category-tile--active .category-tile__count {
+  color: var(--color-border);
+}
+
+/* Nombre de résultats + tri */
+.storefront-sorting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: var(--space-xl);
+  font-size: var(--text-s-size);
+}
+
+.storefront-sorting::before,
+.storefront-sorting::after {
+  display: none;
+}
+
+.woocommerce-result-count {
+  order: -1;
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.woocommerce-ordering {
+  margin: 0 0 0 auto;
+}
+
+.woocommerce-ordering select {
+  width: auto;
+  min-width: 14rem;
+}
+
+.page-description:empty,
+.page-description p:empty {
+  display: none;
+}
+
+
+/* =========================================================
+   9. Grille et cartes produit (.product-card du Design System)
+   ========================================================= */
+.site-main ul.products,
+ul.products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2xl) var(--space-l);
+  margin: 0 0 var(--space-2xl);
+}
+
+/* Les « clearfix » de Storefront deviendraient des cases vides de la grille */
+ul.products::before,
+ul.products::after {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .site-main ul.products,
+  ul.products {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3xl) var(--space-xl);
+  }
+}
+
+/* Storefront fixe une largeur en % (29 % ou 30 %) avec des sélecteurs très précis :
+   on reprend les mêmes pour que la grille CSS décide seule de la taille des cartes. */
+.storefront-full-width-content .site-main ul.products.columns-3 li.product,
+.storefront-full-width-content .site-main ul.products.columns-4 li.product,
+.site-main ul.products.columns-3 li.product,
+.site-main ul.products.columns-4 li.product,
+.site-main ul.products li.product,
+ul.products li.product {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  float: none;
+  margin: 0;
+  margin-right: 0;
+  font-size: var(--text-m-size);
+  text-align: left;
+}
+
+ul.products li.product .woocommerce-LoopProduct-link {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--space-s);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+ul.products li.product img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin: 0 0 var(--space-s);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+  object-fit: cover;
+}
+
+ul.products li.product .woocommerce-loop-product__title {
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-m-size);
+  line-height: var(--text-m-lh);
+  font-weight: 400;
+}
+
+ul.products li.product .price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-s);
+  margin: 0 0 var(--space-m);
+  color: var(--color-text);
+  font-size: var(--text-price-size);
+  line-height: var(--text-price-lh);
+  font-weight: 600;
+}
+
+ul.products li.product .button {
+  width: 100%;
+  margin: 0;
+}
+
+ul.products li.product .added_to_cart {
+  width: 100%;
+  margin-top: var(--space-s);
+}
+
+/* Produit épuisé : photo en gris, textes atténués */
+ul.products li.product.outofstock img {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+ul.products li.product.outofstock .woocommerce-loop-product__title,
+ul.products li.product.outofstock .price {
+  color: var(--color-text-muted);
+}
+
+
+/* =========================================================
+   10. Prix et badges (communs boutique + fiche)
+   ========================================================= */
+.price del {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  font-weight: 400;
+  opacity: 1;
+}
+
+.price ins {
+  margin: 0;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-m);
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.badge--promo,
+.onsale.badge--promo {
+  border-color: transparent;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.badge--soldout {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+/* Sur les cartes : badge posé en haut à gauche de la photo */
+ul.products li.product .onsale,
+ul.products li.product .product-badge--soldout {
+  position: absolute;
+  top: var(--space-m);
+  left: var(--space-m);
+  z-index: 1;
+  margin: 0;
+}
+
+
+/* =========================================================
+   11. Pagination
+   ========================================================= */
+.woocommerce-pagination {
+  float: none;
+}
+
+.woocommerce-pagination .page-numbers {
+  display: flex;
+  gap: var(--space-s);
+  margin: 0;
+}
+
+.woocommerce-pagination .page-numbers li .page-numbers {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-field);
+  background: none;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.woocommerce-pagination .page-numbers li .page-numbers.current {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+
+/* =========================================================
+   12. Fiche produit (US-2.4)
+   ========================================================= */
+.single-product div.product .woocommerce-product-gallery {
+  margin-bottom: var(--space-2xl);
+}
+
+.single-product div.product .woocommerce-product-gallery img {
+  border-radius: var(--radius-card);
+}
+
+.single-product div.product .summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-l);
+}
+
+.single-product div.product .summary > * {
+  margin-bottom: 0;
+}
+
+.single-product div.product .summary .onsale {
+  position: static;
+}
+
+.single-product div.product .product_title {
+  margin: 0;
+  font-size: var(--text-h1-size);
+  line-height: var(--text-h1-lh);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.single-product div.product .woocommerce-product-details__short-description {
+  color: var(--color-text-muted);
+}
+
+.single-product div.product p.price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-s);
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 600;
+}
+
+.single-product div.product p.price del {
+  font-size: var(--text-m-size);
+}
+
+/* Stock : point de couleur devant « En stock » / « Rupture de stock » */
+.single-product div.product .stock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin: 0;
+  font-size: var(--text-s-size);
+}
+
+.single-product div.product .stock::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: currentColor;
+  font-family: inherit;
+}
+
+.single-product div.product .stock.in-stock {
+  color: var(--color-success);
+}
+
+.single-product div.product .stock.out-of-stock {
+  color: var(--color-error);
+}
+
+/* Quantité + Ajouter au panier sur une ligne */
+.single-product div.product form.cart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-m);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.single-product div.product form.cart::before,
+.single-product div.product form.cart::after {
+  display: none;
+}
+
+.single-product div.product form.cart .quantity {
+  float: none;
+  margin: 0;
+}
+
+.single-product div.product form.cart .quantity .qty {
+  width: 5rem;
+  min-height: var(--touch-target);
+  border-radius: var(--radius-pill);
+  text-align: center;
+  font-weight: 600;
+}
+
+.single-product div.product form.cart .single_add_to_cart_button {
+  flex-grow: 1;
+  float: none;
+}
+
+.single-product div.product .product_meta {
+  width: 100%;
+  padding-top: 0;
+  border: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+}
+
+.single-product div.product .product_meta a {
+  color: var(--color-text-muted);
+}
+
+.product-pickup {
+  margin: var(--space-xs) 0 0;
+}
+
+/* Onglets horizontaux (Storefront les met en colonne) */
+.single-product div.product .woocommerce-tabs {
+  padding-top: var(--space-xl);
+}
+
+.storefront-full-width-content .woocommerce-tabs ul.tabs,
+.woocommerce-tabs ul.tabs {
+  display: flex;
+  gap: var(--space-2xl);
+  width: 100%;
+  float: none;
+  margin: 0 0 var(--space-xl);
+  border-top: 0;
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+}
+
+.woocommerce-tabs ul.tabs li {
+  border: 0;
+}
+
+.woocommerce-tabs ul.tabs li::after {
+  display: none;
+}
+
+.woocommerce-tabs ul.tabs li a {
+  padding: var(--space-m) 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.woocommerce-tabs ul.tabs li.active a {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.storefront-full-width-content .woocommerce-tabs .panel,
+.woocommerce-tabs .panel {
+  width: 100%;
+  max-width: 45rem;
+  float: none;
+}
+
+.woocommerce-tabs .panel h2:first-of-type {
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+}
+
+/* Produits apparentés : mêmes cartes, titre en H2 du Design System */
+.related.products > h2,
+.upsells.products > h2 {
+  margin-bottom: var(--space-xl);
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   13. Messages WooCommerce (.notice du Design System)
+   ========================================================= */
+.woocommerce-message,
+.woocommerce-info,
+.woocommerce-error {
+  padding: var(--space-m) var(--space-l);
+  border-left: 4px solid currentColor;
+  border-radius: 0;
+  font-size: var(--text-s-size);
+}
+
+.woocommerce-message {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.woocommerce-info {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.woocommerce-error {
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.woocommerce-message a,
+.woocommerce-info a,
+.woocommerce-error a {
+  color: inherit;
+}
+
+.woocommerce-message .button,
+.woocommerce-info .button {
+  float: right;
+  min-height: auto;
+  padding: var(--space-xs) var(--space-l);
+  border-color: currentColor;
+  background-color: transparent;
+  color: inherit;
+}
+
+
+/* =========================================================
+   14. Pied de page (.footer)
+   ========================================================= */
+.site-footer {
+  padding: var(--space-3xl) 0;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.site-footer a,
+.site-footer a:hover {
+  color: var(--color-on-primary);
+}
+
+.footer__columns {
+  display: grid;
+  gap: var(--space-2xl);
+}
+
+@media (min-width: 768px) {
+  .footer__columns {
+    grid-template-columns: repeat(4, max-content);
+    gap: var(--space-3xl);
+  }
+}
+
+.footer__logo-image {
+  width: 10.625rem;
+  height: auto;
+}
+
+.footer__title {
+  margin: 0 0 var(--space-s);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer__list {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0;
+  list-style: none;
+}
+
+.footer__link,
+.footer__text {
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+  text-decoration: none;
+}
+
+.site-footer .footer__link {
+  text-decoration: none;
+}
+
+.site-footer .footer__link:hover {
+  text-decoration: underline;
+}
+
+.footer__credit {
+  margin: var(--space-2xl) 0 0;
+  color: var(--color-border);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+
+/* =========================================================
+   15. Barre du bas mobile (barre « handheld » de Storefront
+   restylée en .bottom-bar du Design System)
+   ========================================================= */
+.storefront-handheld-footer-bar {
+  border-top: 0;
+  background-color: var(--color-dark);
+  box-shadow: none;
+}
+
+.storefront-handheld-footer-bar ul li > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-s);
+  height: 3.25rem;
+  border-right: 0;
+  color: var(--color-on-primary);
+  font-size: var(--text-s-size);
+  text-decoration: none;
+  text-indent: 0;
+}
+
+/* Les icônes de Storefront sont remplacées par le texte de la maquette */
+.storefront-handheld-footer-bar ul li > a::before {
+  display: none;
+}
+
+.storefront-handheld-footer-bar ul li.cart .count {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--text-label-size);
+  line-height: 1;
+  font-weight: 600;
+}
+
+.storefront-handheld-footer-bar ul li.search .site-search {
+  background-color: var(--color-dark);
+}
