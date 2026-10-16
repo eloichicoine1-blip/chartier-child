@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.3.1
+Version:      0.4.1
 Text Domain:  chartier-child
 */
 
@@ -1437,10 +1437,12 @@ ul.products li.product .product-badge--soldout {
   float: none;
 }
 
-/* Tant qu'il manque une option, le bouton reste rouge : le clic affiche le message d'erreur */
+/* Tant qu'il manque une option, le bouton reste rouge : le clic affiche le message d'erreur.
+   Storefront impose « opacity: .5 !important » aux boutons désactivés :
+   seul un !important peut le contrer (seul !important du fichier). */
 .single-product div.product .single_add_to_cart_button.disabled,
 .single-product div.product .single_add_to_cart_button.disabled:hover {
-  opacity: 1;
+  opacity: 1 !important;
   background-color: var(--color-primary);
   color: var(--color-on-primary);
   cursor: pointer;
@@ -1525,4 +1527,55 @@ ul.products li.product .product-badge--soldout {
 
 .quantity:has(input[type='hidden']) .quantity__button {
   display: none;
+}
+
+/* =========================================================
+   18. Bloc « Composition · Allergènes » (champs SCF, IT-4)
+   Même allure que le ticket « Votre note » du Design System.
+   ========================================================= */
+.product-info {
+  width: 100%;
+  padding: var(--space-xl);
+  border: 2px dashed var(--color-border-field);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+}
+
+.product-info__title {
+  margin: 0 0 var(--space-m);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.product-info__list {
+  display: grid;
+  gap: var(--space-m);
+  margin: 0;
+}
+
+.product-info__row {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+@media (min-width: 768px) {
+  .product-info__row {
+    grid-template-columns: 11rem 1fr;
+    gap: var(--space-l);
+  }
+}
+
+.product-info__label {
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+  font-weight: 600;
+}
+
+.product-info__value {
+  margin: 0;
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
 }

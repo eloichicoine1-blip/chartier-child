@@ -11,6 +11,7 @@
  * 6. Fiche produit simple (US-2.4)
  * 7. Produits à options (IT-3)
  * 8. Sélecteur de quantité « − 1 + »
+ * 9. Champs SCF sur la fiche produit (IT-4)
  *
  * @package chartier-child
  */
@@ -401,3 +402,52 @@ add_action( 'woocommerce_after_quantity_input_field', 'chartier_quantity_plus_bu
 
 /** Barre « Ajouter au panier » collante de Storefront désactivée (non prévue dans la maquette desktop). */
 add_filter( 'theme_mod_storefront_sticky_add_to_cart', '__return_false' );
+
+
+/* =========================================================
+   9. Champs SCF sur la fiche produit (IT-4, US-4.3)
+   Les champs sont créés dans le back-office (SCF › Groupes de champs) :
+   composition, allergenes, valeurs_nutritionnelles.
+   Ici, on ne fait que les afficher, avant le prix (priorité 22 < prix 25).
+   ========================================================= */
+function chartier_product_scf_fields() {
+	// Sécurité : si SCF est désactivé, on n'affiche rien au lieu de provoquer une erreur.
+	if ( ! function_exists( 'get_field' ) ) {
+		return;
+	}
+
+	$fields = array(
+		'composition'             => 'Composition',
+		'allergenes'              => 'Allergènes',
+		'valeurs_nutritionnelles' => 'Valeurs nutritionnelles',
+	);
+
+	$rows = '';
+	foreach ( $fields as $name => $label ) {
+		$value = get_field( $name );
+
+		// Case à cocher (allergènes) : SCF renvoie un tableau de libellés → « Lait, Œufs ».
+		if ( is_array( $value ) ) {
+			$value = implode( ', ', $value );
+		}
+
+		if ( $value ) {
+			$rows .= sprintf(
+				'<div class="product-info__row"><dt class="product-info__label">%s</dt><dd class="product-info__value">%s</dd></div>',
+				esc_html( $label ),
+				nl2br( esc_html( $value ) )
+			);
+		}
+	}
+
+	// Aucun champ rempli pour ce plat : pas de bloc vide.
+	if ( '' === $rows ) {
+		return;
+	}
+
+	echo '<section class="product-info" aria-labelledby="product-info-title">';
+	echo '<h2 class="product-info__title" id="product-info-title">Composition · Allergènes</h2>';
+	echo '<dl class="product-info__list">' . $rows . '</dl>'; // phpcs:ignore -- valeurs déjà échappées ci-dessus.
+	echo '</section>';
+}
+add_action( 'woocommerce_single_product_summary', 'chartier_product_scf_fields', 22 );
