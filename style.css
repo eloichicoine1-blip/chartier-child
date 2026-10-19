@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.6.2
+Version:      0.7.2
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–20. Styles du site : Storefront et WooCommerce
+   3–21. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -1599,7 +1599,9 @@ ul.products li.product .product-badge--soldout {
 .woocommerce-cart .entry-header,
 .storefront-full-width-content.woocommerce-cart .entry-header,
 .woocommerce-checkout .entry-header,
-.storefront-full-width-content.woocommerce-checkout .entry-header {
+.storefront-full-width-content.woocommerce-checkout .entry-header,
+.woocommerce-account .entry-header,
+.storefront-full-width-content.woocommerce-account .entry-header {
   padding: 0 0 var(--space-xl);
   text-align: left;
 }
@@ -1938,7 +1940,8 @@ ul#shipping_method label {
    20. Commande (IT-6) : coordonnées à gauche, « Votre commande » à droite,
    étapes numérotées (composant Step marker), instructions pour le retrait
    ========================================================= */
-.woocommerce-checkout .entry-title {
+.woocommerce-checkout .entry-title,
+.woocommerce-account .entry-title {
   margin: 0;
   font-family: var(--font-heading);
   font-size: var(--text-display-size);
@@ -2347,4 +2350,398 @@ form.checkout #payment .payment_methods input[type='radio']:focus-visible {
   font-size: var(--text-m-size);
   line-height: var(--text-m-lh);
   font-weight: 600;
+}
+
+
+/* =========================================================
+   21. Compte client (IT-7)
+   Déconnecté : « Connexion » et « S'inscrire » côte à côte.
+   Connecté : menu à gauche (pastilles défilantes en mobile), contenu à droite.
+   ========================================================= */
+
+/* ---------- Connexion / inscription ---------- */
+.col2-set#customer_login {
+  display: grid;
+  gap: var(--space-xl);
+  width: auto;
+  float: none;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .col2-set#customer_login {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+.col2-set#customer_login .col-1,
+.col2-set#customer_login .col-2,
+.storefront-full-width-content .col2-set#customer_login .col-1,
+.storefront-full-width-content .col2-set#customer_login .col-2 {
+  width: auto;
+  float: none;
+  margin: 0;
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+.col2-set#customer_login .col-1 {
+  background-color: var(--color-background);
+}
+
+/* Créer un compte : fond papier, comme la maquette */
+.col2-set#customer_login .col-2 {
+  background-color: var(--color-paper);
+}
+
+.col2-set#customer_login h2 {
+  margin: 0 0 var(--space-l);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+.woocommerce-form-login,
+.woocommerce-form-register {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.woocommerce-form-login .form-row,
+.woocommerce-form-register .form-row,
+.woocommerce-EditAccountForm .form-row,
+.woocommerce-address-fields .form-row {
+  width: auto;
+  float: none;
+  margin: 0 0 var(--space-m);
+  padding: 0;
+}
+
+.woocommerce-form-login .form-row label,
+.woocommerce-form-register .form-row label,
+.woocommerce-EditAccountForm .form-row label,
+.woocommerce-address-fields .form-row label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--text-s-size);
+}
+
+.woocommerce-form-login .input-text,
+.woocommerce-form-register .input-text,
+.woocommerce-EditAccountForm .input-text,
+.woocommerce-address-fields .input-text {
+  width: 100%;
+}
+
+/* Afficher / masquer le mot de passe (bouton de WooCommerce) */
+.password-input {
+  position: relative;
+  display: block;
+}
+
+.password-input .show-password-input {
+  position: absolute;
+  top: 50%;
+  right: var(--space-s);
+  min-height: 0;
+  padding: var(--space-xs);
+  background: none;
+  color: var(--color-text-muted);
+  transform: translateY(-50%);
+}
+
+/* « Se souvenir de moi » + bouton « Se connecter » noir (Button / Dark) */
+.woocommerce-form-login .woocommerce-form-login__rememberme {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+  font-size: var(--text-s-size);
+}
+
+.woocommerce-form-login .woocommerce-form-login__rememberme input {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-dark);
+}
+
+.woocommerce-form-login .woocommerce-form-login__submit {
+  float: none;
+  margin: 0;
+  background-color: var(--color-dark);
+}
+
+.woocommerce-form-login .woocommerce-form-login__submit:hover {
+  background-color: var(--color-dark-hover);
+}
+
+.woocommerce-LostPassword {
+  margin: var(--space-m) 0 0;
+  font-size: var(--text-s-size);
+  font-weight: 600;
+}
+
+/* « S'inscrire » : bouton secondaire (contour) */
+.woocommerce-form-register .woocommerce-form-register__submit {
+  border-color: var(--color-text);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.woocommerce-form-register .woocommerce-form-register__submit:hover {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+.woocommerce-form-register .woocommerce-privacy-policy-text {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+}
+
+/* ---------- Espace connecté ---------- */
+.woocommerce-account.logged-in .entry-content > .woocommerce {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+/* Sans minmax(0, …) la rangée de pastilles du menu élargissait toute la colonne
+   en mobile : le tableau des commandes sortait de l'écran */
+.woocommerce-MyAccount-navigation,
+.woocommerce-MyAccount-content {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .woocommerce-account.logged-in .entry-content > .woocommerce {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: var(--space-3xl);
+  }
+}
+
+.woocommerce-MyAccount-navigation,
+.woocommerce-MyAccount-content,
+.storefront-full-width-content .woocommerce-MyAccount-navigation,
+.storefront-full-width-content .woocommerce-MyAccount-content {
+  width: auto;
+  float: none;
+  margin: 0;
+}
+
+/* Menu : liste verticale en desktop, rubrique active en noir */
+.hentry .entry-content .woocommerce-MyAccount-navigation ul {
+  display: flex;
+  gap: var(--space-s);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-x: auto;
+}
+
+@media (min-width: 768px) {
+  .hentry .entry-content .woocommerce-MyAccount-navigation ul {
+    flex-direction: column;
+    gap: var(--space-xs);
+    overflow: visible;
+  }
+}
+
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li {
+  flex: none;
+  border: 0;
+}
+
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link a {
+  display: block;
+  padding: var(--space-s) var(--space-m);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link a {
+    border: 0;
+    border-radius: var(--radius-field);
+    font-size: var(--text-s-size);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
+
+/* Storefront ajoute une icône devant chaque lien : la maquette n'en a pas */
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link a::before,
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link a::after {
+  display: none;
+}
+
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link a:hover {
+  background-color: var(--color-surface);
+}
+
+.hentry .entry-content .woocommerce-MyAccount-navigation ul li.woocommerce-MyAccount-navigation-link.is-active a {
+  border-color: var(--color-dark);
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+.woocommerce-MyAccount-content h2,
+.woocommerce-MyAccount-content h3 {
+  margin: 0 0 var(--space-l);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+/* ---------- Mes commandes ---------- */
+table.woocommerce-orders-table {
+  width: 100%;
+  border: 0;
+  font-size: var(--text-m-size);
+}
+
+table.woocommerce-orders-table thead th {
+  padding: 0 0 var(--space-s);
+  border-bottom: 1px solid var(--color-border-strong);
+  background: none;
+  font-size: var(--text-label-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+table.woocommerce-orders-table tbody th,
+table.woocommerce-orders-table td {
+  padding: var(--space-m) var(--space-m) var(--space-m) 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  vertical-align: middle;
+}
+
+table.woocommerce-orders-table .woocommerce-orders-table__cell-order-number a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Statut en pastille (Badge du Design System), couleur selon le statut */
+table.woocommerce-orders-table .woocommerce-orders-table__cell-order-status {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.woocommerce-orders-table__row--status-completed .woocommerce-orders-table__cell-order-status {
+  color: var(--color-success);
+}
+
+.woocommerce-orders-table__row--status-cancelled .woocommerce-orders-table__cell-order-status,
+.woocommerce-orders-table__row--status-failed .woocommerce-orders-table__cell-order-status,
+.woocommerce-orders-table__row--status-refunded .woocommerce-orders-table__cell-order-status {
+  color: var(--color-error);
+}
+
+/* « Voir », « Annuler » : petits boutons à contour */
+.my_account_orders .button,
+.woocommerce-MyAccount-content .woocommerce-Button--previous,
+.woocommerce-MyAccount-content .woocommerce-Button--next {
+  min-height: 2.25rem;
+  margin: 0 var(--space-xs) var(--space-xs) 0;
+  padding: var(--space-xs) var(--space-m);
+  border-color: var(--color-text);
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+}
+
+.my_account_orders .button:hover {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+/* Mobile : une carte par commande */
+@media (max-width: 767px) {
+  table.woocommerce-orders-table tr {
+    display: block;
+    margin-bottom: var(--space-m);
+    padding: var(--space-m);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-card);
+  }
+
+  /* Storefront masque le numéro de commande en mobile : on le garde en tête de carte */
+  table.woocommerce-orders-table tbody th {
+    display: block;
+    padding: 0 0 var(--space-xs);
+    border: 0;
+    font-size: var(--text-price-size);
+  }
+
+  table.woocommerce-orders-table td {
+    padding: var(--space-xs) 0;
+    border: 0;
+  }
+
+  table.woocommerce-orders-table td.woocommerce-orders-table__cell-order-actions {
+    padding-top: var(--space-s);
+    text-align: left;
+  }
+
+  table.woocommerce-orders-table td.woocommerce-orders-table__cell-order-actions::before {
+    display: none;
+  }
+}
+
+/* Adresses : deux colonnes en desktop */
+.woocommerce-MyAccount-content .col2-set.addresses {
+  display: grid;
+  gap: var(--space-xl);
+  width: auto;
+  float: none;
+}
+
+@media (min-width: 768px) {
+  .woocommerce-MyAccount-content .col2-set.addresses {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.woocommerce-MyAccount-content .col2-set.addresses .col-1,
+.woocommerce-MyAccount-content .col2-set.addresses .col-2 {
+  width: auto;
+  float: none;
+  margin: 0;
+  padding: var(--space-l);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+.woocommerce-MyAccount-content fieldset {
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.woocommerce-MyAccount-content legend {
+  margin-bottom: var(--space-m);
+  font-weight: 600;
+}
+
+/* Aides sous les champs (« Indique comment votre nom apparaîtra… ») */
+.woocommerce-MyAccount-content .form-row em,
+.woocommerce-MyAccount-content .form-row .description {
+  display: block;
+  margin-top: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  font-style: normal;
 }

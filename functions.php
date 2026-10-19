@@ -14,6 +14,7 @@
  * 9. Champs SCF sur la fiche produit (IT-4)
  * 10. Panier et expédition (IT-5)
  * 11. Commande : instructions pour le retrait, champs, confirmation (IT-6)
+ * 12. Compte client (IT-7)
  *
  * @package chartier-child
  */
@@ -74,8 +75,12 @@ add_action( 'wp_enqueue_scripts', 'chartier_remove_storefront_customizer_css', 1
  * Pages WooCommerce en pleine largeur à l'IT-2.
  * La colonne de filtres de la maquette arrivera avec l'IT-18.
  */
+function chartier_is_shop_context() {
+	return function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() );
+}
+
 function chartier_full_width_body_class( $classes ) {
-	if ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+	if ( chartier_is_shop_context() ) {
 		$classes[] = 'storefront-full-width-content';
 	}
 	return $classes;
@@ -83,7 +88,7 @@ function chartier_full_width_body_class( $classes ) {
 add_filter( 'body_class', 'chartier_full_width_body_class' );
 
 function chartier_remove_shop_sidebar() {
-	if ( function_exists( 'is_woocommerce' ) && is_woocommerce() ) {
+	if ( chartier_is_shop_context() ) {
 		remove_action( 'storefront_sidebar', 'storefront_get_sidebar', 10 );
 	}
 }
@@ -644,3 +649,17 @@ function chartier_thankyou_pickup_instructions( $order_id ) {
 	}
 }
 add_action( 'woocommerce_thankyou', 'chartier_thankyou_pickup_instructions', 5 );
+
+
+/* =========================================================
+   12. Compte client (IT-7)
+   Inscription et connexion se règlent dans WooCommerce → Réglages →
+   Comptes et confidentialité ; le thème ne fait que l'habillage.
+   ========================================================= */
+
+/** Menu du compte : pas de « Téléchargements » (aucun produit téléchargeable). */
+function chartier_account_menu_items( $items ) {
+	unset( $items['downloads'] );
+	return $items;
+}
+add_filter( 'woocommerce_account_menu_items', 'chartier_account_menu_items' );
