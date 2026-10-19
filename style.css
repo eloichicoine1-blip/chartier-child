@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.7.3
+Version:      0.8.1
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–21. Styles du site : Storefront et WooCommerce
+   3–22. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -2745,4 +2745,133 @@ table.woocommerce-orders-table .woocommerce-orders-table__cell-order-status {
   color: var(--color-text-muted);
   font-size: var(--text-s-size);
   font-style: normal;
+}
+
+
+/* =========================================================
+   22. Promotions (IT-10)
+   Champ « Code promo » dans le ticket du panier, ligne de remise en vert
+   dans le total, lien « Retirer ».
+   ========================================================= */
+table.shop_table.cart td.actions .coupon {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+  float: left;
+  width: min(100%, 24rem);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+table.shop_table.cart td.actions .coupon .input-text {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin: 0;
+}
+
+/* « Appliquer » : bouton secondaire (contour), comme la maquette */
+table.shop_table.cart td.actions .coupon .button {
+  flex: none;
+  margin: 0;
+  border-color: var(--color-text);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+table.shop_table.cart td.actions .coupon .button:hover {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 767px) {
+  table.shop_table.cart td.actions .coupon {
+    display: flex;
+    float: none;
+    width: 100%;
+    margin-bottom: var(--space-m);
+  }
+}
+
+/* Ligne de remise : « Code promo : baba2 » … « −2,00 € · Retirer » */
+.cart_totals tr.cart-discount th,
+table.woocommerce-checkout-review-order-table tr.cart-discount th {
+  font-weight: 400;
+}
+
+.cart_totals tr.cart-discount td,
+table.woocommerce-checkout-review-order-table tr.cart-discount td {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.woocommerce-remove-coupon {
+  margin-left: var(--space-xs);
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+/* Page Commande : « Vous avez un code promo ? » et son petit formulaire */
+.checkout_coupon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-l);
+  border: 2px dashed var(--color-border-field);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+}
+
+.checkout_coupon p {
+  margin: 0;
+}
+
+.checkout_coupon .form-row-first {
+  flex: 1 1 14rem;
+}
+
+.checkout_coupon .form-row-first .input-text {
+  width: 100%;
+}
+
+.checkout_coupon .form-row-last .button {
+  border-color: var(--color-text);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.checkout_coupon .clear {
+  display: none;
+}
+
+/* Message d'erreur de WooCommerce sous le champ (« code inexistant », « expiré »…) :
+   il se glisse dans .coupon ; sans retour à la ligne il écrasait le champ. */
+table.shop_table.cart td.actions .coupon .coupon-error-notice,
+.checkout_coupon .coupon-error-notice {
+  flex-basis: 100%;
+  order: 3;
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+  text-align: left;
+}
+
+table.shop_table.cart td.actions .coupon .input-text.has-error,
+.checkout_coupon .input-text.has-error {
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+/* WooCommerce place le focus sur le message après l'ajout d'un code
+   (pour les lecteurs d'écran) : pas de cadre noir autour */
+.woocommerce-notices-wrapper [tabindex='-1']:focus,
+.woocommerce-message:focus,
+.woocommerce-error:focus,
+.woocommerce-info:focus {
+  outline: none;
 }

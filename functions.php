@@ -17,6 +17,7 @@
  * 12. Compte client (IT-7)
  * 13. E-mails transactionnels (IT-8)
  * 14. Commandes : annulation par le client (IT-9)
+ * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
  */
@@ -478,6 +479,7 @@ function chartier_cart_texts( $translation, $text, $domain ) {
 		'Proceed to checkout' => 'Valider la commande',
 		'Billing details'     => 'Vos coordonnées',
 		'Billing &amp; Shipping' => 'Vos coordonnées',
+		'Apply coupon'        => 'Appliquer',
 	);
 	return isset( $texts[ $text ] ) ? $texts[ $text ] : $translation;
 }
