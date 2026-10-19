@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.7.2
+Version:      0.7.3
 Text Domain:  chartier-child
 */
 
@@ -2092,11 +2092,12 @@ form.checkout .select2-container .select2-selection--single .select2-selection__
 
 /* Retrait choisi (classe posée par commande.js) : pas d'adresse, mais les instructions.
    On cible les identifiants : le script de WooCommerce qui adapte les champs
-   au pays réécrit leurs classes. */
+   au pays réécrit leurs classes.
+   Le code postal reste visible : c'est lui qui détermine la zone (Paris → livraison
+   proposée). Masqué, un client hors Paris par défaut ne verrait jamais la livraison. */
 form.checkout.is-pickup #billing_country_field,
 form.checkout.is-pickup #billing_address_1_field,
 form.checkout.is-pickup #billing_address_2_field,
-form.checkout.is-pickup #billing_postcode_field,
 form.checkout.is-pickup #billing_city_field,
 form.checkout.is-pickup #billing_state_field {
   display: none;

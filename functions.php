@@ -16,6 +16,7 @@
  * 11. Commande : instructions pour le retrait, champs, confirmation (IT-6)
  * 12. Compte client (IT-7)
  * 13. E-mails transactionnels (IT-8)
+ * 14. Commandes : annulation par le client (IT-9)
  *
  * @package chartier-child
  */
@@ -584,6 +585,10 @@ function chartier_checkout_fields( $fields ) {
 	if ( isset( $fields['billing']['billing_phone'] ) ) {
 		$fields['billing']['billing_phone']['required'] = true;
 	}
+	// Le code postal décide de la zone : la livraison n'apparaît que pour Paris.
+	if ( isset( $fields['billing']['billing_postcode'] ) ) {
+		$fields['billing']['billing_postcode']['description'] = 'La livraison est proposée à Paris (75…) ; partout ailleurs, retrait au comptoir.';
+	}
 
 	if ( chartier_is_pickup_chosen() ) {
 		foreach ( array( 'billing_country', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_city', 'billing_state' ) as $key ) {
@@ -726,3 +731,30 @@ function chartier_email_pickup_instructions( $order, $sent_to_admin, $plain_text
 	chartier_pickup_instructions_box();
 }
 add_action( 'woocommerce_email_before_order_table', 'chartier_email_pickup_instructions', 5, 3 );
+
+
+/* =========================================================
+   14. Commandes (IT-9)
+   Statuts, stock et remboursements sont gérés par WooCommerce dans le
+   back-office. Le thème ajoute seulement l'annulation par le client
+   d'une commande en attente de virement (US-9.3).
+   ========================================================= */
+
+/**
+ * Par défaut, le client ne peut annuler qu'une commande « En attente de paiement » ou « Échouée ».
+ * Une commande par virement est « En attente » (on-hold) tant que le virement n'est pas reçu :
+ * on autorise aussi son annulation depuis Mon compte → Commandes.
+ */
+function chartier_cancellable_statuses( $statuses ) {
+	$statuses[] = 'on-hold';
+	return array_unique( $statuses );
+}
+add_filter( 'woocommerce_valid_order_statuses_for_cancel', 'chartier_cancellable_statuses' );
+
+/** Script de confirmation avant l'annulation (« Annuler la commande n°… ? »). */
+function chartier_enqueue_account_script() {
+	if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+		wp_enqueue_script( 'chartier-compte', get_stylesheet_directory_uri() . '/assets/js/compte.js', array(), wp_get_theme()->get( 'Version' ), true );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_enqueue_account_script' );
