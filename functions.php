@@ -12,6 +12,7 @@
  * 7. Produits à options (IT-3)
  * 8. Sélecteur de quantité « − 1 + »
  * 9. Champs SCF sur la fiche produit (IT-4)
+ * 10. Panier et expédition (IT-5)
  *
  * @package chartier-child
  */
@@ -451,3 +452,45 @@ function chartier_product_scf_fields() {
 	echo '</section>';
 }
 add_action( 'woocommerce_single_product_summary', 'chartier_product_scf_fields', 22 );
+
+
+/* =========================================================
+   10. Panier et expédition (IT-5)
+   Le panier utilise le gabarit classique de WooCommerce (shortcode [woocommerce_cart]),
+   habillé en « ticket » comme la maquette.
+   ========================================================= */
+
+/** Textes du panier alignés sur la maquette. */
+function chartier_cart_texts( $translation, $text, $domain ) {
+	if ( 'woocommerce' !== $domain ) {
+		return $translation;
+	}
+	$texts = array(
+		'Cart totals'         => 'Total',
+		'Proceed to checkout' => 'Valider la commande',
+	);
+	return isset( $texts[ $text ] ) ? $texts[ $text ] : $translation;
+}
+add_filter( 'gettext', 'chartier_cart_texts', 10, 3 );
+
+/** Titre de la ligne des modes d'expédition : « Retrait ou livraison ». */
+function chartier_shipping_package_name() {
+	return 'Retrait ou livraison';
+}
+add_filter( 'woocommerce_shipping_package_name', 'chartier_shipping_package_name' );
+
+/**
+ * Chaque mode d'expédition sur deux lignes, comme la maquette :
+ * « Retrait · Grands Boulevards » puis « Gratuit » (ou le prix de la livraison).
+ */
+function chartier_shipping_method_label( $label, $method ) {
+	$cost = (float) $method->get_cost();
+	$note = $cost > 0 ? wc_price( $cost ) : 'Gratuit';
+
+	return sprintf(
+		'<span class="shipping-method__name">%s</span><span class="shipping-method__note">%s</span>',
+		esc_html( $method->get_label() ),
+		wp_kses_post( $note )
+	);
+}
+add_filter( 'woocommerce_cart_shipping_method_full_label', 'chartier_shipping_method_label', 10, 2 );

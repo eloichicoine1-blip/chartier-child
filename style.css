@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.4.1
+Version:      0.5.1
 Text Domain:  chartier-child
 */
 
@@ -1302,8 +1302,19 @@ ul.products li.product .product-badge--soldout {
   font-weight: 600;
 }
 
+.storefront-handheld-footer-bar ul li > a {
+  background-color: var(--color-dark);
+}
+
+/* Le champ de recherche de Storefront est caché derrière les liens ;
+   comme ils sont moins hauts que l'original, on le masque tant que
+   « Recherche » n'est pas ouvert. */
 .storefront-handheld-footer-bar ul li.search .site-search {
   background-color: var(--color-dark);
+}
+
+.storefront-handheld-footer-bar ul li.search:not(.active) .site-search {
+  visibility: hidden;
 }
 
 
@@ -1578,4 +1589,344 @@ ul.products li.product .product-badge--soldout {
   margin: 0;
   font-size: var(--text-s-size);
   line-height: var(--text-s-lh);
+}
+
+/* =========================================================
+   19. Panier (IT-5) : « Votre note » à gauche, « Total » à droite
+   ========================================================= */
+
+/* Titre de la page en Gloock, aligné à gauche */
+.woocommerce-cart .entry-header,
+.storefront-full-width-content.woocommerce-cart .entry-header {
+  padding: 0 0 var(--space-xl);
+  text-align: left;
+}
+
+.woocommerce-cart .entry-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: 400;
+}
+
+/* Deux colonnes en desktop */
+.woocommerce-cart .entry-content > .woocommerce {
+  display: grid;
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .woocommerce-cart .entry-content > .woocommerce {
+    grid-template-columns: minmax(0, 1fr) 26rem;
+    gap: var(--space-3xl);
+  }
+}
+
+/* Messages, panier vide : toute la largeur */
+.woocommerce-cart .entry-content > .woocommerce > .woocommerce-notices-wrapper,
+.woocommerce-cart .entry-content > .woocommerce > .wc-empty-cart-message,
+.woocommerce-cart .entry-content > .woocommerce > .cart-empty,
+.woocommerce-cart .entry-content > .woocommerce > .return-to-shop {
+  grid-column: 1 / -1;
+}
+
+.woocommerce-cart .woocommerce-notices-wrapper:empty {
+  display: none;
+}
+
+/* ---------- « Votre note » : la liste des plats en ticket ---------- */
+.woocommerce-cart-form {
+  padding: var(--space-l);
+  border: 2px dashed var(--color-border-field);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+}
+
+@media (min-width: 768px) {
+  .woocommerce-cart-form {
+    padding: var(--space-xl);
+  }
+}
+
+table.shop_table.cart {
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+}
+
+table.shop_table.cart thead {
+  display: none;
+}
+
+table.shop_table.cart td,
+table.shop_table.cart th {
+  padding: var(--space-l) var(--space-s);
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: none;
+  vertical-align: middle;
+}
+
+table.shop_table.cart td.product-remove {
+  width: 2rem;
+  border-top: 0;
+}
+
+table.shop_table.cart td.product-remove a.remove {
+  position: static;
+  color: var(--color-text);
+  font-size: var(--text-price-size);
+  text-decoration: none;
+}
+
+table.shop_table.cart td.product-remove a.remove:hover {
+  background: none;
+  color: var(--color-primary);
+}
+
+table.shop_table.cart .product-thumbnail img {
+  width: 3.5rem;
+  max-width: none;
+  border-radius: var(--radius-field);
+}
+
+table.shop_table.cart td.product-name a {
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Options choisies (Cuisson : Saignant · Sauce : Poivre) */
+table.shop_table.cart td.product-name dl.variation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-xs);
+  margin: var(--space-xs) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+table.shop_table.cart td.product-name dl.variation dt,
+table.shop_table.cart td.product-name dl.variation dd,
+table.shop_table.cart td.product-name dl.variation p {
+  margin: 0;
+  font-weight: 400;
+}
+
+table.shop_table.cart td.product-name dl.variation dd + dt::before {
+  content: '· ';
+}
+
+table.shop_table.cart td.product-price {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  text-align: right;
+}
+
+table.shop_table.cart td.product-subtotal {
+  font-size: var(--text-price-size);
+  font-weight: 600;
+  text-align: right;
+}
+
+table.shop_table.cart td.product-quantity .quantity .qty {
+  width: 2.5rem;
+}
+
+/* Ligne du bas : bouton « Mettre à jour le panier » en lien */
+table.shop_table.cart td.actions {
+  padding: var(--space-l) 0 0;
+  border-bottom: 0;
+  text-align: right;
+}
+
+table.shop_table.cart td.actions .button[name='update_cart'] {
+  min-height: auto;
+  padding: var(--space-xs);
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Mobile : photo à gauche ; nom + bouton retirer, puis quantité + sous-total */
+@media (max-width: 767px) {
+  table.shop_table_responsive.cart tr.cart_item {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
+    grid-template-areas:
+      'thumb name remove'
+      'thumb qty  subtotal';
+    gap: var(--space-s) var(--space-m);
+    align-items: center;
+    padding: var(--space-m) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  table.shop_table_responsive.cart tr.cart_item td {
+    display: block;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  table.shop_table_responsive.cart tr.cart_item td::before {
+    display: none;
+  }
+
+  /* Le prix unitaire est déjà implicite (quantité × sous-total) */
+  table.shop_table_responsive.cart tr.cart_item td.product-price {
+    display: none;
+  }
+
+  table.shop_table_responsive.cart tr.cart_item td.product-thumbnail { grid-area: thumb; align-self: start; }
+  table.shop_table_responsive.cart tr.cart_item td.product-thumbnail img { width: 4rem; max-width: none; }
+  table.shop_table_responsive.cart tr.cart_item td.product-name { grid-area: name; }
+  table.shop_table_responsive.cart tr.cart_item td.product-remove { grid-area: remove; justify-self: end; }
+  table.shop_table_responsive.cart tr.cart_item td.product-quantity { grid-area: qty; }
+  table.shop_table_responsive.cart tr.cart_item td.product-subtotal { grid-area: subtotal; text-align: right; }
+
+  /* Bloc Total : on garde les intitulés en colonne de gauche
+     au lieu des « Sous-total: » ajoutés par Storefront */
+  .cart_totals table.shop_table_responsive tbody th {
+    display: table-cell;
+  }
+
+  .cart_totals table.shop_table_responsive tr td {
+    display: table-cell;
+  }
+
+  .cart_totals table.shop_table_responsive tr td[data-title]::before {
+    display: none;
+  }
+
+  .cart-collaterals .cart_totals {
+    padding: var(--space-l);
+  }
+}
+
+/* ---------- « Total » : carte à droite ---------- */
+.cart-collaterals .cart_totals {
+  width: 100%;
+  float: none;
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-background);
+}
+
+.cart-collaterals .cart_totals h2 {
+  margin: 0 0 var(--space-l);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+.cart_totals table.shop_table {
+  width: 100%;
+  margin: 0;
+  border: 0;
+}
+
+.cart_totals table.shop_table th,
+.cart_totals table.shop_table td {
+  padding: var(--space-s) 0;
+  border: 0;
+  background: none;
+  font-weight: 400;
+}
+
+.cart_totals table.shop_table td {
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Modes de retrait / livraison : titre au-dessus, liste de boutons radio */
+.cart_totals tr.woocommerce-shipping-totals {
+  display: flex;
+  flex-direction: column;
+}
+
+.cart_totals tr.woocommerce-shipping-totals th {
+  padding-top: var(--space-l);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cart_totals tr.woocommerce-shipping-totals td {
+  text-align: left;
+  font-weight: 400;
+}
+
+ul#shipping_method {
+  display: grid;
+  gap: var(--space-m);
+  margin: 0;
+}
+
+ul#shipping_method li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--space-m);
+  align-items: start;
+  margin: 0;
+}
+
+ul#shipping_method input[type='radio'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0.125rem 0 0;
+  accent-color: var(--color-primary);
+}
+
+ul#shipping_method label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.shipping-method__name {
+  font-size: var(--text-m-size);
+  line-height: var(--text-m-lh);
+}
+
+.shipping-method__note {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+.woocommerce-shipping-destination,
+.woocommerce-shipping-calculator {
+  display: none;
+}
+
+/* Total en grand */
+.cart_totals tr.order-total th,
+.cart_totals tr.order-total td {
+  padding-top: var(--space-l);
+}
+
+.cart_totals tr.order-total td {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+}
+
+.cart_totals .wc-proceed-to-checkout {
+  padding: var(--space-l) 0 0;
+}
+
+.cart_totals .wc-proceed-to-checkout .button.checkout-button {
+  width: 100%;
+  margin: 0;
+  font-size: var(--text-button-size);
 }
