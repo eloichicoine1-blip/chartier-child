@@ -15,6 +15,7 @@
  * 10. Panier et expédition (IT-5)
  * 11. Commande : instructions pour le retrait, champs, confirmation (IT-6)
  * 12. Compte client (IT-7)
+ * 13. E-mails transactionnels (IT-8)
  *
  * @package chartier-child
  */
@@ -636,16 +637,22 @@ function chartier_order_received_text() {
 }
 add_filter( 'woocommerce_thankyou_order_received_text', 'chartier_order_received_text' );
 
-function chartier_thankyou_pickup_instructions( $order_id ) {
-	$order = wc_get_order( $order_id );
-	if ( ! $order ) {
-		return;
+/** La commande est-elle à retirer au comptoir ? (utilisé par la confirmation et les e-mails) */
+function chartier_order_has_pickup( $order ) {
+	if ( ! $order instanceof WC_Order ) {
+		return false;
 	}
 	foreach ( $order->get_shipping_methods() as $item ) {
 		if ( chartier_is_pickup_method( $item->get_method_id() ) ) {
-			chartier_pickup_instructions_box();
-			return;
+			return true;
 		}
+	}
+	return false;
+}
+
+function chartier_thankyou_pickup_instructions( $order_id ) {
+	if ( chartier_order_has_pickup( wc_get_order( $order_id ) ) ) {
+		chartier_pickup_instructions_box();
 	}
 }
 add_action( 'woocommerce_thankyou', 'chartier_thankyou_pickup_instructions', 5 );
@@ -663,3 +670,59 @@ function chartier_account_menu_items( $items ) {
 	return $items;
 }
 add_filter( 'woocommerce_account_menu_items', 'chartier_account_menu_items' );
+
+
+/* =========================================================
+   13. E-mails transactionnels (IT-8)
+   - US-8.1 : expéditeur, couleurs et pied de page réglés dans
+     WooCommerce → Réglages → E-mails.
+   - US-8.2 : gabarits surchargés dans woocommerce/emails/
+     (email-header.php, email-footer.php) + styles ci-dessous.
+   - US-8.3 : instructions de retrait ajoutées aux e-mails client.
+   Les clients mail ignorent les polices web : Gloock est remplacée par Georgia,
+   Poppins par Helvetica / Arial.
+   ========================================================= */
+
+/** Styles ajoutés à ceux de WooCommerce (ils sont ensuite recopiés « en ligne » dans chaque balise). */
+function chartier_email_styles( $css ) {
+	$css .= '
+		#template_container { border: 0; border-radius: 0; box-shadow: none; }
+		.chartier-band { background-color: #111111; color: #ffffff; padding: 10px 16px; font-family: Helvetica, Arial, sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-align: center; text-transform: uppercase; }
+		.chartier-logo { background-color: #ffffff; padding: 24px 16px; text-align: center; border-bottom: 1px solid #111111; }
+		.chartier-logo img { display: inline-block; width: 220px; height: auto; border: 0; }
+		#template_header { background-color: #ffffff; color: #111111; border-radius: 0; }
+		#template_header h1 { color: #111111; font-family: Georgia, "Times New Roman", serif; font-size: 32px; font-weight: normal; line-height: 1.15; text-align: left; text-shadow: none; }
+		#body_content_inner, #body_content td, #body_content th { color: #111111; font-family: Helvetica, Arial, sans-serif; }
+		h2, h3 { color: #111111; font-family: Helvetica, Arial, sans-serif; }
+		#template_footer { background-color: #C31729; }
+		#template_footer #credit { padding: 32px 24px; color: #ffffff; font-family: Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5; text-align: center; }
+		#template_footer #credit p { color: #ffffff; margin: 8px 0 0; }
+		#template_footer #credit a { color: #ffffff; }
+		.chartier-footer-places { font-weight: bold; letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
+		.pickup-instructions { margin: 0 0 24px; padding: 16px 20px; border: 2px dashed #9B9493; border-radius: 8px; background-color: #EDE7DC; }
+		.pickup-instructions__title { margin: 0 0 4px; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+		.pickup-instructions__text { margin: 0; }
+	';
+	return $css;
+}
+add_filter( 'woocommerce_email_styles', 'chartier_email_styles' );
+
+/**
+ * US-8.3 : instructions de retrait dans les e-mails envoyés au client
+ * (commande en attente, en cours, terminée, facture) quand la commande est un retrait.
+ */
+function chartier_email_pickup_instructions( $order, $sent_to_admin, $plain_text ) {
+	if ( $sent_to_admin || ! chartier_order_has_pickup( $order ) ) {
+		return;
+	}
+	$text = trim( chartier_pickup_instructions() );
+	if ( '' === $text ) {
+		return;
+	}
+	if ( $plain_text ) {
+		echo "\n" . esc_html( strtoupper( 'Instructions pour le retrait' ) ) . "\n" . esc_html( $text ) . "\n\n";
+		return;
+	}
+	chartier_pickup_instructions_box();
+}
+add_action( 'woocommerce_email_before_order_table', 'chartier_email_pickup_instructions', 5, 3 );
