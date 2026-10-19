@@ -13,6 +13,7 @@
  * 8. Sélecteur de quantité « − 1 + »
  * 9. Champs SCF sur la fiche produit (IT-4)
  * 10. Panier et expédition (IT-5)
+ * 11. Commande : instructions pour le retrait, champs, confirmation (IT-6)
  *
  * @package chartier-child
  */
@@ -468,6 +469,8 @@ function chartier_cart_texts( $translation, $text, $domain ) {
 	$texts = array(
 		'Cart totals'         => 'Total',
 		'Proceed to checkout' => 'Valider la commande',
+		'Billing details'     => 'Vos coordonnées',
+		'Billing &amp; Shipping' => 'Vos coordonnées',
 	);
 	return isset( $texts[ $text ] ) ? $texts[ $text ] : $translation;
 }
@@ -494,3 +497,150 @@ function chartier_shipping_method_label( $label, $method ) {
 	);
 }
 add_filter( 'woocommerce_cart_shipping_method_full_label', 'chartier_shipping_method_label', 10, 2 );
+
+
+/* =========================================================
+   11. Commande (IT-6)
+   - US-6.1 : texte « Instructions pour le retrait » réglable dans
+     WooCommerce → Réglages → Expédition → Options d'expédition.
+   - Le texte s'affiche dans le formulaire quand un retrait est choisi ;
+     l'adresse n'est alors plus demandée (elle ne sert qu'à la livraison).
+   ========================================================= */
+
+/** Texte par défaut, utilisé tant que l'admin n'a rien saisi. */
+function chartier_pickup_instructions_default() {
+	return 'Présentez-vous au comptoir de vente à emporter avec votre numéro de commande. Pas besoin de faire la queue.';
+}
+
+/** Texte réglé dans le back-office. */
+function chartier_pickup_instructions() {
+	return (string) get_option( 'chartier_pickup_instructions', chartier_pickup_instructions_default() );
+}
+
+/** Ajoute le champ dans la section « Options d'expédition » des réglages WooCommerce. */
+function chartier_pickup_instructions_setting( $settings ) {
+	$new = array();
+	foreach ( $settings as $setting ) {
+		if ( isset( $setting['type'], $setting['id'] ) && 'sectionend' === $setting['type'] && 'shipping_options' === $setting['id'] ) {
+			$new[] = array(
+				'title'    => 'Instructions pour le retrait',
+				'desc'     => 'Affiché dans le formulaire de commande et sur la confirmation quand le client choisit un retrait.',
+				'desc_tip' => true,
+				'id'       => 'chartier_pickup_instructions',
+				'type'     => 'textarea',
+				'default'  => chartier_pickup_instructions_default(),
+				'css'      => 'min-width: 400px; height: 90px;',
+			);
+		}
+		$new[] = $setting;
+	}
+	return $new;
+}
+add_filter( 'woocommerce_get_settings_shipping', 'chartier_pickup_instructions_setting' );
+
+/** Le mode d'expédition est-il un retrait au comptoir ? */
+function chartier_is_pickup_method( $method_id ) {
+	return 0 === strpos( (string) $method_id, 'local_pickup' ) || 0 === strpos( (string) $method_id, 'pickup_location' );
+}
+
+/** Le client a-t-il choisi un retrait (d'après la session) ? */
+function chartier_is_pickup_chosen() {
+	if ( ! function_exists( 'WC' ) || ! WC()->session ) {
+		return false;
+	}
+	foreach ( (array) WC()->session->get( 'chosen_shipping_methods', array() ) as $method_id ) {
+		if ( chartier_is_pickup_method( $method_id ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Champs dans l'ordre de la maquette : prénom, nom, téléphone, e-mail, puis l'adresse.
+ * L'adresse (masquée en CSS pour un retrait) n'est plus obligatoire quand un retrait est choisi.
+ */
+function chartier_checkout_fields( $fields ) {
+	unset( $fields['billing']['billing_company'] );
+
+	$layout = array(
+		'billing_first_name' => array( 10, 'form-row-first' ),
+		'billing_last_name'  => array( 20, 'form-row-last' ),
+		'billing_phone'      => array( 22, 'form-row-first' ),
+		'billing_email'      => array( 24, 'form-row-last' ),
+	);
+	foreach ( $layout as $key => $setup ) {
+		if ( isset( $fields['billing'][ $key ] ) ) {
+			$fields['billing'][ $key ]['priority'] = $setup[0];
+			$fields['billing'][ $key ]['class']    = array( $setup[1] );
+		}
+	}
+	if ( isset( $fields['billing']['billing_phone'] ) ) {
+		$fields['billing']['billing_phone']['required'] = true;
+	}
+
+	if ( chartier_is_pickup_chosen() ) {
+		foreach ( array( 'billing_country', 'billing_address_1', 'billing_address_2', 'billing_postcode', 'billing_city', 'billing_state' ) as $key ) {
+			if ( isset( $fields['billing'][ $key ] ) ) {
+				$fields['billing'][ $key ]['required'] = false;
+			}
+		}
+	}
+	return $fields;
+}
+add_filter( 'woocommerce_checkout_fields', 'chartier_checkout_fields', 20 );
+
+/**
+ * Le téléphone fait partie des champs d'adresse de WooCommerce : le script qui adapte
+ * les champs au pays lui redonne sa position par défaut (après l'adresse).
+ * On fixe donc sa position ici, à la source.
+ */
+function chartier_default_address_fields( $fields ) {
+	if ( isset( $fields['phone'] ) ) {
+		$fields['phone']['priority'] = 22;
+		$fields['phone']['class']    = array( 'form-row-first' );
+	}
+	return $fields;
+}
+add_filter( 'woocommerce_default_address_fields', 'chartier_default_address_fields' );
+
+/** Encadré « Instructions pour le retrait » sous les coordonnées (style ticket). */
+function chartier_pickup_instructions_box() {
+	$text = trim( chartier_pickup_instructions() );
+	if ( '' === $text ) {
+		return;
+	}
+	printf(
+		'<div class="pickup-instructions" role="note"><p class="pickup-instructions__title">Instructions pour le retrait</p><p class="pickup-instructions__text">%s</p></div>',
+		nl2br( esc_html( $text ) )
+	);
+}
+add_action( 'woocommerce_after_checkout_billing_form', 'chartier_pickup_instructions_box' );
+
+/** Script qui affiche les instructions ou l'adresse selon le mode choisi. */
+function chartier_enqueue_checkout_script() {
+	if ( function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page() ) {
+		wp_enqueue_script( 'chartier-commande', get_stylesheet_directory_uri() . '/assets/js/commande.js', array( 'jquery' ), wp_get_theme()->get( 'Version' ), true );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_enqueue_checkout_script' );
+
+/** Page de confirmation : « Oui chef ! » (maquette), puis les instructions si c'est un retrait. */
+function chartier_order_received_text() {
+	return '<span class="order-received__title">Oui chef !</span> Votre commande est bien reçue.';
+}
+add_filter( 'woocommerce_thankyou_order_received_text', 'chartier_order_received_text' );
+
+function chartier_thankyou_pickup_instructions( $order_id ) {
+	$order = wc_get_order( $order_id );
+	if ( ! $order ) {
+		return;
+	}
+	foreach ( $order->get_shipping_methods() as $item ) {
+		if ( chartier_is_pickup_method( $item->get_method_id() ) ) {
+			chartier_pickup_instructions_box();
+			return;
+		}
+	}
+}
+add_action( 'woocommerce_thankyou', 'chartier_thankyou_pickup_instructions', 5 );

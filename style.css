@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.5.1
+Version:      0.6.2
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–15. Styles du site : Storefront et WooCommerce
+   3–20. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -1597,7 +1597,9 @@ ul.products li.product .product-badge--soldout {
 
 /* Titre de la page en Gloock, aligné à gauche */
 .woocommerce-cart .entry-header,
-.storefront-full-width-content.woocommerce-cart .entry-header {
+.storefront-full-width-content.woocommerce-cart .entry-header,
+.woocommerce-checkout .entry-header,
+.storefront-full-width-content.woocommerce-checkout .entry-header {
   padding: 0 0 var(--space-xl);
   text-align: left;
 }
@@ -1929,4 +1931,420 @@ ul#shipping_method label {
   width: 100%;
   margin: 0;
   font-size: var(--text-button-size);
+}
+
+
+/* =========================================================
+   20. Commande (IT-6) : coordonnées à gauche, « Votre commande » à droite,
+   étapes numérotées (composant Step marker), instructions pour le retrait
+   ========================================================= */
+.woocommerce-checkout .entry-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: 400;
+}
+
+/* Grille : Storefront place les deux blocs en flottants, on passe en grid */
+form.checkout {
+  display: grid;
+  gap: var(--space-xl);
+  align-items: start;
+  counter-reset: step;
+}
+
+form.checkout::before,
+form.checkout::after {
+  display: none;
+}
+
+form.checkout .col2-set,
+form.checkout #order_review_heading,
+form.checkout #order_review {
+  width: auto;
+  float: none;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  form.checkout {
+    grid-template-columns: minmax(0, 1fr) 26rem;
+    grid-template-areas:
+      'details heading'
+      'details review';
+    column-gap: var(--space-3xl);
+  }
+
+  form.checkout #customer_details { grid-area: details; }
+  form.checkout #order_review_heading { grid-area: heading; }
+  form.checkout #order_review { grid-area: review; }
+}
+
+form.checkout .col2-set .col-1,
+form.checkout .col2-set .col-2 {
+  width: 100%;
+  float: none;
+  margin: 0;
+}
+
+/* Titres d'étape « 1 Vos coordonnées », « 2 Votre commande » */
+.woocommerce-billing-fields > h3,
+#order_review_heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  margin: 0 0 var(--space-l);
+  padding: 0;
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+  counter-increment: step;
+}
+
+.woocommerce-billing-fields > h3::before,
+#order_review_heading::before {
+  content: counter(step);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-field);
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+  font-size: var(--text-s-size);
+  font-weight: 600;
+}
+
+/* Champs : deux colonnes en desktop, une en mobile */
+.woocommerce-billing-fields__field-wrapper {
+  display: grid;
+  gap: var(--space-m) var(--space-l);
+}
+
+@media (min-width: 768px) {
+  .woocommerce-billing-fields__field-wrapper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .woocommerce-billing-fields__field-wrapper .form-row-wide {
+    grid-column: 1 / -1;
+  }
+
+  .woocommerce-billing-fields__field-wrapper .form-row-first { grid-column: 1; }
+  .woocommerce-billing-fields__field-wrapper .form-row-last { grid-column: 2; }
+}
+
+form.checkout .form-row {
+  width: auto;
+  float: none;
+  margin: 0;
+  padding: 0;
+}
+
+form.checkout .form-row label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+form.checkout .form-row .required {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+form.checkout .form-row input.input-text,
+form.checkout .form-row textarea,
+form.checkout .form-row select {
+  width: 100%;
+}
+
+form.checkout .form-row textarea {
+  min-height: 5rem;
+  padding: var(--space-s) var(--space-m);
+}
+
+form.checkout .form-row.woocommerce-invalid input.input-text {
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+/* Liste des pays (select2 de WooCommerce) */
+form.checkout .select2-container .select2-selection--single {
+  height: 2.875rem;
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-field);
+}
+
+form.checkout .select2-container .select2-selection--single .select2-selection__rendered {
+  padding: 0 var(--space-m);
+  line-height: 2.875rem;
+}
+
+form.checkout .select2-container .select2-selection--single .select2-selection__arrow {
+  height: 2.875rem;
+}
+
+/* Retrait choisi (classe posée par commande.js) : pas d'adresse, mais les instructions.
+   On cible les identifiants : le script de WooCommerce qui adapte les champs
+   au pays réécrit leurs classes. */
+form.checkout.is-pickup #billing_country_field,
+form.checkout.is-pickup #billing_address_1_field,
+form.checkout.is-pickup #billing_address_2_field,
+form.checkout.is-pickup #billing_postcode_field,
+form.checkout.is-pickup #billing_city_field,
+form.checkout.is-pickup #billing_state_field {
+  display: none;
+}
+
+.pickup-instructions {
+  display: none;
+  margin-top: var(--space-xl);
+  padding: var(--space-l);
+  border: 2px dashed var(--color-border-field);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+}
+
+form.checkout.is-pickup .pickup-instructions,
+.woocommerce-order .pickup-instructions {
+  display: block;
+}
+
+.pickup-instructions__title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pickup-instructions__text {
+  margin: 0;
+}
+
+/* Notes de commande : le titre « Informations complémentaires » est superflu */
+.woocommerce-additional-fields {
+  margin-top: var(--space-xl);
+}
+
+.woocommerce-additional-fields > h3 {
+  display: none;
+}
+
+/* ---------- « Votre commande » : carte à droite ---------- */
+#order_review {
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-background);
+}
+
+#order_review_heading {
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  #order_review_heading {
+    margin-bottom: var(--space-l);
+  }
+}
+
+table.woocommerce-checkout-review-order-table {
+  width: 100%;
+  margin: 0 0 var(--space-l);
+  border: 0;
+}
+
+table.woocommerce-checkout-review-order-table thead {
+  display: none;
+}
+
+table.woocommerce-checkout-review-order-table th,
+table.woocommerce-checkout-review-order-table td {
+  padding: var(--space-s) 0;
+  border: 0;
+  background: none;
+  font-weight: 400;
+  vertical-align: top;
+}
+
+table.woocommerce-checkout-review-order-table td:last-child {
+  text-align: right;
+}
+
+table.woocommerce-checkout-review-order-table .product-quantity {
+  font-weight: 400;
+}
+
+/* Modes de retrait / livraison : même présentation que le panier */
+table.woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals {
+  display: flex;
+  flex-direction: column;
+}
+
+table.woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals th {
+  padding-top: var(--space-l);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+table.woocommerce-checkout-review-order-table tr.woocommerce-shipping-totals td {
+  text-align: left;
+}
+
+table.woocommerce-checkout-review-order-table tr.order-total th,
+table.woocommerce-checkout-review-order-table tr.order-total td {
+  padding-top: var(--space-l);
+}
+
+table.woocommerce-checkout-review-order-table tr.order-total td {
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 600;
+}
+
+/* Paiement : boutons radio + description, sans les fonds gris de Storefront */
+/* Storefront met « padding: 0 !important » sur la liste : l'espace et le filet
+   sont donc portés par #payment, pour garder un seul !important dans le fichier */
+#payment {
+  padding-top: var(--space-l);
+  border-top: 1px solid var(--color-border);
+  background: none;
+}
+
+#payment .payment_methods {
+  display: grid;
+  gap: var(--space-m);
+}
+
+#payment .payment_methods > li {
+  background: none;
+}
+
+#payment .payment_methods > .wc_payment_method > label {
+  display: inline;
+  padding: 0;
+  font-size: var(--text-m-size);
+}
+
+/* Bouton radio dessiné comme le composant Radio (anneau, point rouge si choisi) :
+   le rendu natif était écrasé par une autre feuille de style */
+form.checkout #payment .payment_methods input[type='radio'] {
+  appearance: none;
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0 var(--space-s) 0 0;
+  border: 2px solid var(--color-text);
+  border-radius: 50%;
+  background: var(--color-background);
+  vertical-align: -0.25em;
+  cursor: pointer;
+}
+
+form.checkout #payment .payment_methods input[type='radio']:checked {
+  border-color: var(--color-primary);
+  background: radial-gradient(circle, var(--color-primary) 0 40%, var(--color-background) 45%);
+}
+
+form.checkout #payment .payment_methods input[type='radio']:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+#payment .payment_methods li .payment_box {
+  margin: var(--space-xs) 0 0;
+  padding: 0 0 0 calc(1.25rem + var(--space-s));
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+#payment .payment_methods li .payment_box::before {
+  display: none;
+}
+
+#payment .place-order {
+  margin: var(--space-l) 0 0;
+  padding: 0;
+}
+
+#payment .place-order .button {
+  width: 100%;
+  font-size: var(--text-button-size);
+}
+
+#payment .woocommerce-privacy-policy-text {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+}
+
+/* ---------- Confirmation de commande ---------- */
+.woocommerce-order .woocommerce-thankyou-order-received {
+  margin: 0 0 var(--space-xl);
+  font-size: var(--text-m-size);
+}
+
+.order-received__title {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+}
+
+.woocommerce-order ul.order_details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-l);
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-l);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  list-style: none;
+}
+
+.woocommerce-order ul.order_details li {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  float: none;
+  font-size: var(--text-label-size);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.woocommerce-order ul.order_details li strong {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: var(--text-m-size);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* « Oui chef ! » remplace le titre de page « Commande reçue » (doublon) */
+.woocommerce-order-received .entry-header {
+  display: none;
+}
+
+/* Coordonnées bancaires du virement : titres ramenés à l'échelle de la page */
+.woocommerce-order .wc-bacs-bank-details-heading {
+  margin: var(--space-xl) 0 var(--space-m);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+.woocommerce-order .wc-bacs-bank-details-account-name {
+  margin: 0 0 var(--space-s);
+  font-size: var(--text-m-size);
+  line-height: var(--text-m-lh);
+  font-weight: 600;
 }
