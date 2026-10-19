@@ -91,6 +91,7 @@ git add -A && git commit -m "[IT-X] Description" && git push
 ddev export-db --file=chartier-itX.sql.gz
 scp chartier-itX.sql.gz chicoine3@mmi.unilim.fr:~/
 rsync -avz wp-content/uploads/ chicoine3@mmi.unilim.fr:~/public_html/wordpress/wp-content/uploads/
+rsync -avz wp-content/languages/ chicoine3@mmi.unilim.fr:~/public_html/wordpress/wp-content/languages/   # traductions FR (sinon le site s'affiche en anglais)
 
 # Serveur
 cd ~/public_html/wordpress
