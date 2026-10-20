@@ -1,0 +1,75 @@
+{
+    "key": "group_chartier_membre",
+    "title": "Profil du membre",
+    "fields": [
+        {
+            "key": "field_chartier_membre_poste",
+            "label": "Poste",
+            "name": "poste",
+            "type": "text",
+            "instructions": "Le métier affiché sous le nom (ex. Maître d’hôtel).",
+            "required": 1,
+            "placeholder": "Maître d’hôtel"
+        },
+        {
+            "key": "field_chartier_membre_restaurant",
+            "label": "Bouillon",
+            "name": "restaurant",
+            "type": "select",
+            "instructions": "Le restaurant où travaille ce membre.",
+            "required": 1,
+            "choices": {
+                "grands-boulevards": "Grands Boulevards",
+                "montparnasse": "Montparnasse",
+                "gare-de-l-est": "Gare de l’Est"
+            },
+            "return_format": "label",
+            "ui": 0
+        },
+        {
+            "key": "field_chartier_membre_arrivee",
+            "label": "Chez Chartier depuis",
+            "name": "arrivee",
+            "type": "number",
+            "instructions": "Année d’arrivée.",
+            "min": 1896,
+            "max": 2026,
+            "step": 1
+        },
+        {
+            "key": "field_chartier_membre_plat",
+            "label": "Plat préféré",
+            "name": "plat_prefere",
+            "type": "text",
+            "instructions": "Un plat de la carte."
+        },
+        {
+            "key": "field_chartier_membre_citation",
+            "label": "Citation",
+            "name": "citation",
+            "type": "textarea",
+            "instructions": "Une phrase du membre, affichée en grand sur sa fiche.",
+            "rows": 3,
+            "new_lines": ""
+        }
+    ],
+    "location": [
+        [
+            {
+                "param": "post_type",
+                "operator": "==",
+                "value": "membre"
+            }
+        ]
+    ],
+    "menu_order": 0,
+    "position": "acf_after_title",
+    "style": "default",
+    "label_placement": "top",
+    "instruction_placement": "label",
+    "hide_on_screen": "",
+    "active": true,
+    "description": "Champs du profil d’un membre de l’équipe (IT-11). Enregistré en JSON local dans le thème : versionné avec Git.",
+    "show_in_rest": 0,
+    "modified": 1792420000
+}

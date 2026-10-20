@@ -17,6 +17,7 @@
  * 12. Compte client (IT-7)
  * 13. E-mails transactionnels (IT-8)
  * 14. Commandes : annulation par le client (IT-9)
+ * 15. Équipe : type de contenu « membre » (IT-11)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -79,6 +80,9 @@ add_action( 'wp_enqueue_scripts', 'chartier_remove_storefront_customizer_css', 1
  * La colonne de filtres de la maquette arrivera avec l'IT-18.
  */
 function chartier_is_shop_context() {
+	if ( is_post_type_archive( 'membre' ) || is_singular( 'membre' ) ) {
+		return true; // Pages de l'équipe (IT-11) : pleine largeur, sans barre latérale.
+	}
 	return function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() );
 }
 
@@ -760,3 +764,91 @@ function chartier_enqueue_account_script() {
 	}
 }
 add_action( 'wp_enqueue_scripts', 'chartier_enqueue_account_script' );
+
+
+/* =========================================================
+   15. Équipe (IT-11)
+   - Type de contenu « membre » déclaré en PHP (register_post_type), comme
+     dans le cours : il est versionné avec le thème, un git pull le crée en prod.
+   - Champs du profil (poste, bouillon, arrivée, plat préféré, citation) :
+     groupe SCF enregistré en JSON local dans acf-json/ (versionné lui aussi).
+   - Affichage : archive-membre.php (liste) et single-membre.php (fiche),
+     selon la hiérarchie des templates.
+   ========================================================= */
+
+/** US-11.1 : menu « Équipe » dans le back-office, une page par membre. */
+function chartier_register_membre() {
+	register_post_type(
+		'membre',
+		array(
+			'labels'        => array(
+				'name'               => 'Équipe',
+				'singular_name'      => 'Membre de l’équipe',
+				'menu_name'          => 'Équipe',
+				'all_items'          => 'Tous les membres',
+				'add_new'            => 'Ajouter un membre',
+				'add_new_item'       => 'Ajouter un membre de l’équipe',
+				'edit_item'          => 'Modifier le membre',
+				'new_item'           => 'Nouveau membre',
+				'view_item'          => 'Voir la fiche',
+				'search_items'       => 'Rechercher un membre',
+				'not_found'          => 'Aucun membre',
+				'not_found_in_trash' => 'Aucun membre dans la corbeille',
+				'featured_image'     => 'Portrait',
+				'set_featured_image' => 'Choisir le portrait',
+			),
+			'public'        => true,
+			'has_archive'   => 'equipe',
+			'rewrite'       => array(
+				'slug'       => 'equipe',
+				'with_front' => false,
+			),
+			'menu_icon'     => 'dashicons-groups',
+			'menu_position' => 25,
+			'supports'      => array( 'title', 'editor', 'thumbnail', 'page-attributes' ),
+			'show_in_rest'  => true,
+		)
+	);
+}
+add_action( 'init', 'chartier_register_membre' );
+
+/** La liste suit l'ordre choisi dans le back-office (« Ordre » de chaque membre), puis le nom. */
+function chartier_order_membres( $query ) {
+	if ( ! is_admin() && $query->is_main_query() && $query->is_post_type_archive( 'membre' ) ) {
+		$query->set( 'orderby', array( 'menu_order' => 'ASC', 'title' => 'ASC' ) );
+		$query->set( 'posts_per_page', -1 );
+	}
+}
+add_action( 'pre_get_posts', 'chartier_order_membres' );
+
+/**
+ * Fil d'Ariane WooCommerce : « Accueil › L'équipe » sur la liste comme sur
+ * une fiche (sinon il affiche « Équipe » puis « Membre de l'équipe »).
+ */
+function chartier_membre_breadcrumb( $crumbs ) {
+	if ( is_post_type_archive( 'membre' ) || is_singular( 'membre' ) ) {
+		$crumbs[1] = array( 'L’équipe', get_post_type_archive_link( 'membre' ) );
+	}
+	return $crumbs;
+}
+add_filter( 'woocommerce_get_breadcrumb', 'chartier_membre_breadcrumb' );
+
+/**
+ * Portrait du membre : sa photo (image mise en avant) si elle existe,
+ * sinon ses initiales dans un médaillon rouge.
+ */
+function chartier_member_portrait( $class ) {
+	if ( has_post_thumbnail() ) {
+		the_post_thumbnail( 'medium_large', array( 'class' => $class . ' ' . $class . '--photo' ) );
+		return;
+	}
+	$initials = '';
+	foreach ( preg_split( '/\s+/', trim( get_the_title() ) ) as $word ) {
+		$initials .= mb_strtoupper( mb_substr( $word, 0, 1 ) );
+	}
+	printf(
+		'<span class="%1$s %1$s--initials" aria-hidden="true">%2$s</span>',
+		esc_attr( $class ),
+		esc_html( mb_substr( $initials, 0, 2 ) )
+	);
+}
