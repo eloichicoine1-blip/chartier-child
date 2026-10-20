@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.9.0
+Version:      0.10.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–23. Styles du site : Storefront et WooCommerce
+   3–24. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3110,4 +3110,68 @@ table.shop_table.cart td.actions .coupon .input-text.has-error,
   .member__portrait { width: 12rem; }
 
   .member__body { text-align: left; }
+}
+
+
+/* =========================================================
+   24. Collections (IT-12) : tuiles « Nos collections »
+   (boutique + pages /collection/<terme>/, functions.php §16).
+   Même composant que les tuiles de catégories (section 8),
+   en version compacte : une colonne en mobile pour les noms longs.
+   ========================================================= */
+.collection-tiles__title {
+  margin: 0 0 var(--space-m);
+  font-family: var(--font-heading);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 400;
+}
+
+.collection-tiles__list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.collection-tile {
+  flex-direction: row-reverse;
+  align-items: center;
+  min-height: 0;
+  padding: var(--space-m);
+  background-color: var(--color-surface);
+}
+
+.collection-tile .category-tile__title {
+  font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .collection-tiles__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .collection-tile {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 8rem;
+    padding: var(--space-xl);
+  }
+
+  .collection-tile .category-tile__title {
+    font-size: 1.75rem;
+    line-height: 1.1;
+  }
+}
+
+/* Tuile active ou survolée : fond noir comme les catégories (le fond clair ci-dessus l'écrasait). */
+.collection-tile:hover,
+.collection-tile.category-tile--active {
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+/* Description de la collection centrée sous le titre en desktop. */
+@media (min-width: 768px) {
+  .tax-collection .term-description {
+    margin-inline: auto;
+    text-align: center;
+  }
 }

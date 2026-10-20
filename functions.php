@@ -18,6 +18,7 @@
  * 13. E-mails transactionnels (IT-8)
  * 14. Commandes : annulation par le client (IT-9)
  * 15. Équipe : type de contenu « membre » (IT-11)
+ * 16. Collections : taxonomie « collection » (IT-12)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -852,3 +853,123 @@ function chartier_member_portrait( $class ) {
 		esc_html( mb_substr( $initials, 0, 2 ) )
 	);
 }
+
+
+/* =========================================================
+   16. Collections (IT-12)
+   - Taxonomie « collection » déclarée en PHP (register_taxonomy) et
+     rattachée aux produits seulement : elle est indépendante des
+     catégories (product_cat). Versionnée avec le thème, un git pull
+     la crée en prod.
+   - Back-office : Produits › Collections (ajouter, renommer, décrire,
+     ordonner par glisser-déposer), cases à cocher sur chaque produit,
+     colonne « Collections » dans la liste des produits.
+   - Page dédiée : /collection/<terme>/, template taxonomy-collection.php
+     (hiérarchie des templates).
+   ========================================================= */
+
+/** US-12.1 : nouveau critère de classement des produits, administrable. */
+function chartier_register_collection() {
+	register_taxonomy(
+		'collection',
+		'product',
+		array(
+			'labels'            => array(
+				'name'          => 'Collections',
+				'singular_name' => 'Collection',
+				'menu_name'     => 'Collections',
+				'all_items'     => 'Toutes les collections',
+				'edit_item'     => 'Modifier la collection',
+				'view_item'     => 'Voir la collection',
+				'update_item'   => 'Mettre à jour la collection',
+				'add_new_item'  => 'Ajouter une collection',
+				'new_item_name' => 'Nom de la nouvelle collection',
+				'search_items'  => 'Rechercher une collection',
+				'not_found'     => 'Aucune collection',
+				'back_to_items' => '← Retour aux collections',
+			),
+			'public'            => true,
+			'hierarchical'      => true, // Cases à cocher dans la fiche produit, comme les catégories.
+			'show_admin_column' => true,
+			'show_in_rest'      => true,
+			'rewrite'           => array(
+				'slug'       => 'collection',
+				'with_front' => false,
+			),
+		)
+	);
+}
+add_action( 'init', 'chartier_register_collection' );
+
+/** Ordre des collections réglable par glisser-déposer (comme les catégories WooCommerce). */
+function chartier_sortable_collection( $taxonomies ) {
+	$taxonomies[] = 'collection';
+	return $taxonomies;
+}
+add_filter( 'woocommerce_sortable_taxonomies', 'chartier_sortable_collection' );
+
+/**
+ * US-12.3 : tuiles « Nos collections » sur la boutique et sur chaque
+ * collection, pour accéder aux pages dédiées. Même composant que les
+ * tuiles de catégories (.category-tile), en version compacte.
+ */
+function chartier_collection_tiles() {
+	if ( ! is_shop() && ! is_tax( 'collection' ) ) {
+		return;
+	}
+
+	$collections = get_terms(
+		array(
+			'taxonomy'   => 'collection',
+			'hide_empty' => true,
+			'orderby'    => 'menu_order',
+		)
+	);
+
+	if ( empty( $collections ) || is_wp_error( $collections ) ) {
+		return;
+	}
+
+	$current = is_tax( 'collection' ) ? get_queried_object_id() : 0;
+
+	echo '<nav class="category-tiles collection-tiles" aria-labelledby="collection-tiles-title">';
+	echo '<h2 class="collection-tiles__title" id="collection-tiles-title">Nos collections</h2>';
+
+	if ( $current ) {
+		printf(
+			'<a class="category-tiles__all" href="%s">← Toute la carte</a>',
+			esc_url( wc_get_page_permalink( 'shop' ) )
+		);
+	}
+
+	echo '<ul class="category-tiles__list collection-tiles__list">';
+	foreach ( $collections as $collection ) {
+		$active = ( $current === $collection->term_id );
+		printf(
+			'<li><a class="category-tile collection-tile%s" href="%s"%s><span class="category-tile__count">%s</span><span class="category-tile__title">%s</span></a></li>',
+			$active ? ' category-tile--active' : '',
+			esc_url( get_term_link( $collection ) ),
+			$active ? ' aria-current="page"' : '',
+			esc_html( sprintf( _n( '%d plat', '%d plats', $collection->count, 'chartier-child' ), $collection->count ) ),
+			esc_html( $collection->name )
+		);
+	}
+	echo '</ul></nav>';
+}
+add_action( 'woocommerce_archive_description', 'chartier_collection_tiles', 25 );
+
+/**
+ * Fil d'Ariane : « Accueil › La carte › Végétarien » (comme une catégorie),
+ * au lieu de « Collections », qui n'est pas une page.
+ */
+function chartier_collection_breadcrumb( $crumbs ) {
+	if ( is_tax( 'collection' ) ) {
+		foreach ( $crumbs as $i => $crumb ) {
+			if ( 'Collections' === $crumb[0] ) {
+				$crumbs[ $i ] = array( get_the_title( wc_get_page_id( 'shop' ) ), wc_get_page_permalink( 'shop' ) );
+			}
+		}
+	}
+	return $crumbs;
+}
+add_filter( 'woocommerce_get_breadcrumb', 'chartier_collection_breadcrumb' );
