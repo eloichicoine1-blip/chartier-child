@@ -19,6 +19,7 @@
  * 14. Commandes : annulation par le client (IT-9)
  * 15. Équipe : type de contenu « membre » (IT-11)
  * 16. Collections : taxonomie « collection » (IT-12)
+ * 17. Ventes croisées : fiche produit et panier (IT-13)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -973,3 +974,70 @@ function chartier_collection_breadcrumb( $crumbs ) {
 	return $crumbs;
 }
 add_filter( 'woocommerce_get_breadcrumb', 'chartier_collection_breadcrumb' );
+
+
+/* =========================================================
+   17. Ventes croisées (IT-13)
+   - US-13.1 : les plats complémentaires se règlent dans le champ
+     « Ventes croisées » de chaque produit (onglet Produits liés),
+     sans extension. Un seul champ, affiché à deux endroits.
+   - US-13.2 / 13.3 : « Pour compléter votre repas » sur la fiche
+     produit et sous le panier, avec les mêmes cartes que la boutique
+     (gabarit WooCommerce cart/cross-sells.php).
+   - Les « Produits apparentés » automatiques sont retirés : seules
+     les suggestions choisies par l'admin restent.
+   ========================================================= */
+
+/** Titre des suggestions. */
+function chartier_cross_sells_heading() {
+	return 'Pour compléter votre repas';
+}
+add_filter( 'woocommerce_product_cross_sells_products_heading', 'chartier_cross_sells_heading' );
+
+/** Fiche produit : apparentés et « upsells » de Storefront retirés (ajoutés par le parent, d'où le hook init). */
+function chartier_single_product_suggestions_setup() {
+	remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_output_related_products', 20 );
+	remove_action( 'woocommerce_after_single_product_summary', 'storefront_upsell_display', 15 );
+	remove_action( 'woocommerce_after_single_product_summary', 'woocommerce_upsell_display', 15 );
+
+	// Panier : suggestions sous le panier, sur toute la largeur, au lieu de la colonne « Total ».
+	remove_action( 'woocommerce_cart_collaterals', 'woocommerce_cross_sell_display' );
+	add_action( 'woocommerce_after_cart', 'woocommerce_cross_sell_display' );
+}
+add_action( 'init', 'chartier_single_product_suggestions_setup' );
+
+/** Fiche produit : les ventes croisées du plat, sous la description. */
+function chartier_product_cross_sells() {
+	global $product;
+	if ( ! $product ) {
+		return;
+	}
+	$suggestions = array_filter(
+		array_map( 'wc_get_product', $product->get_cross_sell_ids() ),
+		function ( $item ) {
+			return $item && $item->is_visible();
+		}
+	);
+	if ( empty( $suggestions ) ) {
+		return;
+	}
+	wc_get_template(
+		'cart/cross-sells.php',
+		array(
+			'cross_sells' => $suggestions,
+			'columns'     => 3,
+		)
+	);
+}
+add_action( 'woocommerce_after_single_product_summary', 'chartier_product_cross_sells', 20 );
+
+/** Panier : jusqu'à 3 suggestions, 3 par ligne (2 en mobile, comme la boutique). */
+function chartier_cart_cross_sells_total() {
+	return 3;
+}
+add_filter( 'woocommerce_cross_sells_total', 'chartier_cart_cross_sells_total' );
+
+function chartier_cart_cross_sells_columns() {
+	return 3;
+}
+add_filter( 'woocommerce_cross_sells_columns', 'chartier_cart_cross_sells_columns' );

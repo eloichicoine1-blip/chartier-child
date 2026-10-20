@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.10.0
+Version:      0.11.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–24. Styles du site : Storefront et WooCommerce
+   3–25. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -1135,7 +1135,8 @@ ul.products li.product .product-badge--soldout {
 
 /* Produits apparentés : mêmes cartes, titre en H2 du Design System */
 .related.products > h2,
-.upsells.products > h2 {
+.upsells.products > h2,
+.cross-sells > h2 {
   margin-bottom: var(--space-xl);
   font-size: var(--text-h2-size);
   line-height: var(--text-h2-lh);
@@ -3174,4 +3175,25 @@ table.shop_table.cart td.actions .coupon .input-text.has-error,
     margin-inline: auto;
     text-align: center;
   }
+}
+
+
+/* =========================================================
+   25. Ventes croisées (IT-13) : « Pour compléter votre repas »
+   Fiche produit et panier (functions.php §17). Mêmes cartes
+   produit que la boutique ; titre en H2 (section 12).
+   ========================================================= */
+.cross-sells {
+  clear: both;
+  width: 100%;
+  float: none;
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-2xl);
+  border-top: 1px dashed var(--color-border-strong);
+}
+
+/* Panier : sous « Votre note » et « Total », sur toute la largeur */
+.woocommerce-cart .entry-content > .woocommerce > .cross-sells {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
