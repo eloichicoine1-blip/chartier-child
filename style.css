@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.13.0
+Version:      0.14.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–27. Styles du site : Storefront et WooCommerce
+   3–28. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3415,4 +3415,195 @@ table.woocommerce-checkout-review-order-table tr.prep-fee-hint td::before {
 .prep-fee-hint .amount {
   color: var(--color-text);
   font-weight: 600;
+}
+
+
+/* =========================================================
+   28. Accueil (IT-16) : front-page.php
+   Accroche pleine largeur (photo de la salle en noir et blanc,
+   voile sombre à gauche), la carte, nouveautés (cartes produit
+   de la boutique), où retirer sa commande.
+   ========================================================= */
+.home .storefront-breadcrumb {
+  display: none;
+}
+
+.home .site-content {
+  padding-top: 0;
+}
+
+.home-page .site-main {
+  margin-bottom: 0;
+  padding-top: 0; /* Storefront ajoute 4,2em au-dessus du contenu de l'accueil */
+}
+
+/* Cartes produit : bouton pleine largeur et centré, comme sur la boutique */
+.home-page ul.products li.product .button {
+  display: flex;
+  width: 100%;
+  padding-left: var(--space-m);
+  padding-right: var(--space-m);
+  text-align: center;
+}
+
+/* Accroche */
+.home-hero {
+  display: flex;
+  align-items: center;
+  width: 100vw;
+  min-height: 28rem;
+  margin-left: calc(50% - 50vw);
+  background:
+    linear-gradient(90deg, rgba(17, 17, 17, 0.8) 0%, rgba(17, 17, 17, 0.35) 70%),
+    var(--hero-image) center / cover no-repeat;
+  color: var(--color-on-primary);
+}
+
+.home-hero__inner {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--space-3xl) var(--gutter);
+  box-sizing: border-box;
+}
+
+.home-hero__eyebrow {
+  margin: 0 0 var(--space-m);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-hero__title {
+  max-width: 14ch;
+  margin: 0 0 var(--space-l);
+  color: var(--color-on-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-hero-size);
+  line-height: var(--text-hero-lh);
+  font-weight: 400;
+}
+
+.home-hero__text {
+  max-width: 34rem;
+  margin: 0 0 var(--space-xl);
+}
+
+.home-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-m);
+}
+
+.home-hero .home-hero__secondary {
+  border: 1px solid var(--color-on-primary);
+  background-color: transparent;
+  color: var(--color-on-primary);
+}
+
+.home-hero .home-hero__secondary:hover {
+  background-color: var(--color-on-primary);
+  color: var(--color-text);
+}
+
+@media (min-width: 768px) {
+  .home-hero {
+    min-height: 41rem;
+  }
+}
+
+/* Sections */
+.home-section {
+  margin-top: var(--space-3xl);
+}
+
+@media (min-width: 768px) {
+  .home-section {
+    margin-top: var(--space-4xl);
+  }
+}
+
+.home-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-m);
+  margin-bottom: var(--space-xl);
+}
+
+.home-section__title {
+  margin: 0;
+  font-size: var(--text-h2-size);
+  line-height: var(--text-h2-lh);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.home-section__more {
+  color: var(--color-text);
+  font-size: var(--text-s-size);
+  font-weight: 600;
+}
+
+.home-categories {
+  margin-top: 0;
+}
+
+.home-page ul.products {
+  margin-bottom: 0;
+}
+
+/* Où retirer votre commande */
+.home-restaurants {
+  margin-bottom: var(--space-3xl);
+  padding-top: var(--space-3xl);
+  border-top: 1px solid var(--color-border-strong);
+}
+
+.home-restaurants__list {
+  display: grid;
+  gap: var(--space-m);
+  margin: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .home-restaurants {
+    margin-bottom: var(--space-4xl);
+  }
+
+  .home-restaurants__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-xl);
+  }
+}
+
+.restaurant-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-l);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+.restaurant-card__area {
+  color: var(--color-primary);
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.restaurant-card__name {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.restaurant-card__hours {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
 }

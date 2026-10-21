@@ -22,6 +22,7 @@
  * 17. Ventes croisées : fiche produit et panier (IT-13)
  * 18. Avis clients (IT-14)
  * 19. Frais de préparation (IT-15)
+ * 20. Accueil : derniers produits, tuiles de la carte (IT-16)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -86,6 +87,9 @@ add_action( 'wp_enqueue_scripts', 'chartier_remove_storefront_customizer_css', 1
 function chartier_is_shop_context() {
 	if ( is_post_type_archive( 'membre' ) || is_singular( 'membre' ) ) {
 		return true; // Pages de l'équipe (IT-11) : pleine largeur, sans barre latérale.
+	}
+	if ( is_front_page() ) {
+		return true; // Accueil (IT-16) : pleine largeur, sans barre latérale.
 	}
 	return function_exists( 'is_woocommerce' ) && ( is_woocommerce() || is_cart() || is_checkout() || is_account_page() );
 }
@@ -1190,3 +1194,62 @@ function chartier_prep_fee_hint() {
 }
 add_action( 'woocommerce_cart_totals_before_order_total', 'chartier_prep_fee_hint' );
 add_action( 'woocommerce_review_order_before_order_total', 'chartier_prep_fee_hint' );
+
+
+
+/* =========================================================
+   20. Accueil (IT-16)
+   - La page d'accueil est une page statique (Réglages → Lecture),
+     affichée par front-page.php (hiérarchie des templates).
+   - US-16.1 / 16.2 : « Nouveautés » = les 3 derniers produits
+     publiés, lus à chaque affichage (WP_Query) et affichés avec la
+     carte produit de la boutique (get_template_part via
+     wc_get_template_part) : un nouveau plat apparaît tout seul.
+   ========================================================= */
+
+/** Les 3 derniers produits publiés et visibles dans le catalogue. */
+function chartier_latest_products_query( $nombre = 3 ) {
+	return new WP_Query(
+		array(
+			'post_type'           => 'product',
+			'post_status'         => 'publish',
+			'posts_per_page'      => $nombre,
+			'orderby'             => array( 'date' => 'DESC', 'ID' => 'DESC' ),
+			'ignore_sticky_posts' => true,
+			'no_found_rows'       => true,
+			'tax_query'           => array(
+				array(
+					'taxonomy' => 'product_visibility',
+					'field'    => 'name',
+					'terms'    => array( 'exclude-from-catalog' ),
+					'operator' => 'NOT IN',
+				),
+			),
+		)
+	);
+}
+
+/** Tuiles Entrées / Plats / Desserts (même composant que la boutique). */
+function chartier_home_category_tiles() {
+	$categories = get_terms(
+		array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'exclude'    => get_option( 'default_product_cat' ),
+			'orderby'    => 'menu_order',
+		)
+	);
+	if ( empty( $categories ) || is_wp_error( $categories ) ) {
+		return;
+	}
+	echo '<ul class="category-tiles__list">';
+	foreach ( $categories as $category ) {
+		printf(
+			'<li><a class="category-tile" href="%s"><span class="category-tile__count">%s</span><span class="category-tile__title">%s</span></a></li>',
+			esc_url( get_term_link( $category ) ),
+			esc_html( sprintf( _n( '%d plat', '%d plats', $category->count, 'chartier-child' ), $category->count ) ),
+			esc_html( $category->name )
+		);
+	}
+	echo '</ul>';
+}
