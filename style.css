@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.12.0
+Version:      0.13.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–26. Styles du site : Storefront et WooCommerce
+   3–27. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3380,4 +3380,39 @@ ul.products li.product .star-rating {
   .woocommerce-tabs ul.tabs {
     gap: var(--space-l);
   }
+}
+
+
+/* =========================================================
+   27. Frais de préparation (IT-15)
+   Ligne « Frais de préparation » du total (tr.fee) et aide
+   « Plus que … » en petit, sous la ligne, dans le panier et
+   le récapitulatif de commande.
+   ========================================================= */
+.cart_totals tr.fee th,
+.cart_totals tr.fee td,
+table.woocommerce-checkout-review-order-table tr.fee th,
+table.woocommerce-checkout-review-order-table tr.fee td {
+  font-weight: 400;
+}
+
+.cart_totals tr.prep-fee-hint td,
+table.woocommerce-checkout-review-order-table tr.prep-fee-hint td,
+.cart-collaterals .cart_totals tr.prep-fee-hint td {
+  padding-top: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size) !important;
+  font-weight: 400 !important;
+  line-height: var(--text-s-lh);
+  text-align: left;
+}
+
+.cart_totals tr.prep-fee-hint td::before,
+table.woocommerce-checkout-review-order-table tr.prep-fee-hint td::before {
+  display: none;
+}
+
+.prep-fee-hint .amount {
+  color: var(--color-text);
+  font-weight: 600;
 }

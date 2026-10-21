@@ -21,6 +21,7 @@
  * 16. Collections : taxonomie « collection » (IT-12)
  * 17. Ventes croisées : fiche produit et panier (IT-13)
  * 18. Avis clients (IT-14)
+ * 19. Frais de préparation (IT-15)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1099,3 +1100,93 @@ function chartier_product_tabs_titles( $tabs ) {
 	return $tabs;
 }
 add_filter( 'woocommerce_product_tabs', 'chartier_product_tabs_titles', 20 );
+
+
+/* =========================================================
+   19. Frais de préparation (IT-15)
+   - US-15.1 : montant et seuil réglables dans WooCommerce →
+     Réglages → Général, section « Frais de préparation ».
+     Un montant à 0 désactive les frais.
+   - US-15.2 : frais ajoutés au calcul du panier par le hook
+     woocommerce_cart_calculate_fees quand le montant des plats
+     (après réduction) est sous le seuil. Ils suivent donc le panier,
+     la commande, les e-mails et le back-office comme une ligne native.
+   - US-15.3 : la ligne apparaît ou disparaît selon le panier ; tant
+     qu'elle s'applique, le ticket indique combien ajouter pour l'éviter.
+   ========================================================= */
+
+/** Valeurs réglées dans le back-office (par défaut : 1,50 € sous 15 €). */
+function chartier_prep_fee_amount() {
+	return (float) wc_format_decimal( get_option( 'chartier_prep_fee_amount', '1.50' ) );
+}
+
+function chartier_prep_fee_threshold() {
+	return (float) wc_format_decimal( get_option( 'chartier_prep_fee_threshold', '15' ) );
+}
+
+/** Section « Frais de préparation » dans WooCommerce → Réglages → Général. */
+function chartier_prep_fee_settings( $settings ) {
+	$settings[] = array(
+		'title' => 'Frais de préparation',
+		'type'  => 'title',
+		'desc'  => 'Frais fixes ajoutés au panier quand le montant des plats (après réduction) est inférieur au seuil. Mettre le montant à 0 pour les désactiver.',
+		'id'    => 'chartier_prep_fee',
+	);
+	$settings[] = array(
+		'title'             => 'Montant des frais (€)',
+		'id'                => 'chartier_prep_fee_amount',
+		'type'              => 'number',
+		'default'           => '1.50',
+		'custom_attributes' => array( 'min' => '0', 'step' => '0.01' ),
+		'css'               => 'width: 8em;',
+	);
+	$settings[] = array(
+		'title'             => 'Seuil du panier (€)',
+		'desc'              => 'Les frais s’appliquent en dessous de ce montant.',
+		'id'                => 'chartier_prep_fee_threshold',
+		'type'              => 'number',
+		'default'           => '15',
+		'custom_attributes' => array( 'min' => '0', 'step' => '0.01' ),
+		'css'               => 'width: 8em;',
+	);
+	$settings[] = array(
+		'type' => 'sectionend',
+		'id'   => 'chartier_prep_fee',
+	);
+	return $settings;
+}
+add_filter( 'woocommerce_general_settings', 'chartier_prep_fee_settings' );
+
+/** Montant manquant pour atteindre le seuil (0 si atteint ou si les frais sont désactivés). */
+function chartier_prep_fee_missing( $cart ) {
+	if ( ! $cart || $cart->is_empty() || chartier_prep_fee_amount() <= 0 ) {
+		return 0;
+	}
+	$total = (float) $cart->get_cart_contents_total() + (float) $cart->get_cart_contents_tax();
+	return max( 0, chartier_prep_fee_threshold() - $total );
+}
+
+/** US-15.2 : ajout dynamique des frais au calcul du panier. */
+function chartier_add_prep_fee( $cart ) {
+	if ( is_admin() && ! wp_doing_ajax() ) {
+		return;
+	}
+	if ( chartier_prep_fee_missing( $cart ) > 0 ) {
+		$cart->add_fee( 'Frais de préparation', chartier_prep_fee_amount(), false );
+	}
+}
+add_action( 'woocommerce_cart_calculate_fees', 'chartier_add_prep_fee' );
+
+/** US-15.3 : « Plus que X € de plats pour ne pas payer les frais de préparation ». */
+function chartier_prep_fee_hint() {
+	$missing = chartier_prep_fee_missing( WC()->cart );
+	if ( $missing <= 0 ) {
+		return;
+	}
+	printf(
+		'<tr class="prep-fee-hint"><td colspan="2">Plus que %s de plats pour ne pas payer les frais de préparation.</td></tr>',
+		wp_kses_post( wc_price( $missing ) )
+	);
+}
+add_action( 'woocommerce_cart_totals_before_order_total', 'chartier_prep_fee_hint' );
+add_action( 'woocommerce_review_order_before_order_total', 'chartier_prep_fee_hint' );
