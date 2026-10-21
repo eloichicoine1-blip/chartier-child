@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.11.0
+Version:      0.12.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–25. Styles du site : Storefront et WooCommerce
+   3–26. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3196,4 +3196,188 @@ table.shop_table.cart td.actions .coupon .input-text.has-error,
 .woocommerce-cart .entry-content > .woocommerce > .cross-sells {
   grid-column: 1 / -1;
   margin-top: 0;
+}
+
+
+/* =========================================================
+   26. Avis clients (IT-14)
+   Étoiles rouges, avis en cartes « papier », formulaire bordé
+   en pointillés comme le ticket. Pas d'avatar : les clients
+   n'ont pas de photo, le nom suffit.
+   ========================================================= */
+
+/* Étoiles : rouge sur fond de ligne */
+.star-rating::before {
+  color: var(--color-border);
+  opacity: 1;
+}
+
+.star-rating span::before,
+p.stars a,
+p.stars a::before,
+p.stars a:hover ~ a::before,
+p.stars.selected a.active ~ a::before {
+  color: var(--color-primary);
+}
+
+/* Note moyenne sous le titre de la fiche */
+.single-product .woocommerce-product-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s);
+  margin-bottom: var(--space-m);
+}
+
+.single-product .woocommerce-product-rating .star-rating {
+  float: none;
+  margin: 0;
+}
+
+.single-product .woocommerce-product-rating .woocommerce-review-link {
+  color: var(--color-text-muted);
+  font-size: var(--text-s-size);
+}
+
+/* Cartes produit : étoiles sous le nom */
+ul.products li.product .star-rating {
+  margin: var(--space-xs) 0;
+  font-size: 0.875rem;
+}
+
+/* Titre « 1 avis pour … » */
+#reviews .woocommerce-Reviews-title {
+  margin-bottom: var(--space-l);
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+/* Pas encore d'avis : simple texte, pas un bandeau d'alerte */
+#reviews .woocommerce-noreviews {
+  margin: 0 0 var(--space-l);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+}
+
+#reviews .woocommerce-noreviews::before {
+  display: none;
+}
+
+/* Liste des avis */
+#reviews .commentlist {
+  margin: 0 0 var(--space-xl);
+  padding: 0;
+  list-style: none;
+}
+
+#reviews .commentlist li {
+  margin: 0 0 var(--space-m);
+}
+
+#reviews .commentlist li .comment_container {
+  padding: var(--space-l);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+#reviews .commentlist li img.avatar {
+  display: none;
+}
+
+#reviews .commentlist li .comment_container .comment-text,
+.storefront-full-width-content.single-product #reviews .commentlist li .comment_container .comment-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  float: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+#reviews .commentlist li .comment-text .star-rating {
+  float: none;
+  margin: 0;
+}
+
+#reviews .commentlist li .comment-text p.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-s);
+  margin: 0;
+  font-size: var(--text-s-size);
+}
+
+#reviews .woocommerce-review__author {
+  font-size: var(--text-m-size);
+  font-weight: 600;
+}
+
+#reviews .woocommerce-review__verified {
+  color: var(--color-success);
+  font-size: var(--text-s-size);
+  font-style: normal;
+  font-weight: 600;
+}
+
+#reviews .woocommerce-review__dash {
+  display: none;
+}
+
+#reviews .woocommerce-review__published-date {
+  color: var(--color-text-muted);
+}
+
+#reviews .commentlist li .description p {
+  margin: var(--space-xs) 0 0;
+}
+
+/* Formulaire : bordé en pointillés comme le ticket */
+.single-product #reviews .comment-respond {
+  padding: var(--space-l);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background-color: var(--color-background);
+}
+
+#reviews .comment-reply-title {
+  display: block;
+  margin-bottom: var(--space-m);
+  font-weight: 600;
+}
+
+#reviews .comment-form-rating label,
+#reviews .comment-form-comment label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-weight: 600;
+}
+
+#reviews p.stars {
+  margin: 0 0 var(--space-m);
+  font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .single-product #reviews .comment-respond {
+    padding: var(--space-xl);
+  }
+
+  #reviews .commentlist,
+  .single-product #reviews .comment-respond {
+    max-width: 45rem;
+  }
+}
+
+/* Onglets en mobile : écart réduit pour que « Avis » reste visible */
+@media (max-width: 767px) {
+  .woocommerce-tabs ul.tabs {
+    gap: var(--space-l);
+  }
 }

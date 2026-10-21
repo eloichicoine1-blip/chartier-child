@@ -20,6 +20,7 @@
  * 15. Équipe : type de contenu « membre » (IT-11)
  * 16. Collections : taxonomie « collection » (IT-12)
  * 17. Ventes croisées : fiche produit et panier (IT-13)
+ * 18. Avis clients (IT-14)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1041,3 +1042,60 @@ function chartier_cart_cross_sells_columns() {
 	return 3;
 }
 add_filter( 'woocommerce_cross_sells_columns', 'chartier_cart_cross_sells_columns' );
+
+
+/* =========================================================
+   18. Avis clients (IT-14)
+   - Réglages natifs (script docs/avis-it14.php) : avis et notes
+     obligatoires, réservés aux clients ayant acheté le produit
+     (US-14.2), badge « achat vérifié », publication immédiate.
+   - Affichage (US-14.1) : style.css section 26.
+   ========================================================= */
+
+/** Textes des avis. */
+function chartier_review_texts( $translation, $text, $domain ) {
+	if ( 'woocommerce' !== $domain ) {
+		return $translation;
+	}
+	$texts = array(
+		'verified owner' => 'achat vérifié',
+		'Submit'         => 'Publier mon avis',
+		'Add a review'   => 'Donner votre avis',
+	);
+	return isset( $texts[ $text ] ) ? $texts[ $text ] : $translation;
+}
+add_filter( 'gettext', 'chartier_review_texts', 10, 3 );
+
+/**
+ * Auteur d'un avis : prénom + initiale du nom (« Camille D. ») plutôt que
+ * l'identifiant du compte, tiré de l'e-mail à l'inscription (IT-7).
+ */
+function chartier_review_author( $author, $comment_id, $comment ) {
+	if ( ! $comment || 'review' !== $comment->comment_type || ! $comment->user_id ) {
+		return $author;
+	}
+	$prenom = get_user_meta( $comment->user_id, 'first_name', true );
+	$nom    = get_user_meta( $comment->user_id, 'last_name', true );
+	if ( ! $prenom ) {
+		$prenom = get_user_meta( $comment->user_id, 'billing_first_name', true );
+		$nom    = get_user_meta( $comment->user_id, 'billing_last_name', true );
+	}
+	if ( ! $prenom ) {
+		return $author;
+	}
+	return $nom ? $prenom . ' ' . mb_strtoupper( mb_substr( $nom, 0, 1 ) ) . '.' : $prenom;
+}
+add_filter( 'get_comment_author', 'chartier_review_author', 10, 3 );
+
+
+/**
+ * Onglets de la fiche : « Informations complémentaires » devient « Détails »,
+ * pour que l'onglet « Avis » tienne sur la largeur d'un mobile.
+ */
+function chartier_product_tabs_titles( $tabs ) {
+	if ( isset( $tabs['additional_information'] ) ) {
+		$tabs['additional_information']['title'] = 'Détails';
+	}
+	return $tabs;
+}
+add_filter( 'woocommerce_product_tabs', 'chartier_product_tabs_titles', 20 );
