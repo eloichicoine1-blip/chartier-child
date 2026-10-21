@@ -3398,11 +3398,12 @@ table.woocommerce-checkout-review-order-table tr.fee td {
 
 .cart_totals tr.prep-fee-hint td,
 table.woocommerce-checkout-review-order-table tr.prep-fee-hint td,
-.cart-collaterals .cart_totals tr.prep-fee-hint td {
+.cart_totals table.shop_table tr.prep-fee-hint td {
+  /* Sélecteur plus précis que « .cart_totals table.shop_table td » (montants en gras) */
   padding-top: 0;
   color: var(--color-text-muted);
-  font-size: var(--text-s-size) !important;
-  font-weight: 400 !important;
+  font-size: var(--text-s-size);
+  font-weight: 400;
   line-height: var(--text-s-lh);
   text-align: left;
 }
