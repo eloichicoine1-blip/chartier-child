@@ -3429,6 +3429,13 @@ table.woocommerce-checkout-review-order-table tr.prep-fee-hint td::before {
   display: none;
 }
 
+/* Storefront ajoute une marge sous l'en-tête des pages sans fil d'Ariane
+   (« .no-wc-breadcrumb .site-header ») : l'accroche doit coller à l'en-tête. */
+body.home .site-header,
+body.home.no-wc-breadcrumb .site-header {
+  margin-bottom: 0;
+}
+
 .home .site-content {
   padding-top: 0;
 }
