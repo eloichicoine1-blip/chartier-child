@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.14.0
+Version:      0.15.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–28. Styles du site : Storefront et WooCommerce
+   3–29. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3614,4 +3614,23 @@ body.home.no-wc-breadcrumb .site-header {
 .restaurant-card__hours {
   color: var(--color-text-muted);
   font-size: var(--text-s-size);
+}
+
+
+/* =========================================================
+   29. TVA (IT-17)
+   WooCommerce ajoute « (dont x € TVA) » sous le total quand les
+   prix sont saisis TTC : mention discrète sous le montant,
+   pas au corps du prix.
+   ========================================================= */
+
+.order-total .includes_tax,
+.order_details .includes_tax {
+  display: block;
+  font-family: var(--font-body);
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+  font-weight: 400;
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
