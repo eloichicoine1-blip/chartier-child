@@ -29,6 +29,7 @@
  * 24. Back-office : liste des produits lisible (IT-21)
  * 25. Plat star : le plus vendu, badge et bloc d'accueil (IT-W)
  * 26. Sécurité des formulaires : anti-spam invisible (IT-X)
+ * 27. Performances : polices locales, CSS inutiles, galerie allégée (IT-Y)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -43,13 +44,8 @@ defined( 'ABSPATH' ) || exit;
    (versionné avec le numéro « Version » de son en-tête).
    ========================================================= */
 function chartier_enqueue_assets() {
-	// Polices de la charte : Gloock (titres) et Poppins (textes).
-	wp_enqueue_style(
-		'chartier-fonts',
-		'https://fonts.googleapis.com/css2?family=Gloock&family=Poppins:wght@400;600;700&display=swap',
-		array(),
-		null
-	);
+	// Polices de la charte (Gloock, Poppins) : hébergées dans le thème depuis l'IT-Y
+	// (assets/fonts, @font-face en section 35 du style.css) au lieu de Google Fonts.
 
 	// Mise à jour du total et du compteur du panier sans recharger la page.
 	if ( class_exists( 'WooCommerce' ) ) {
@@ -1957,4 +1953,43 @@ function chartier_antispam_dashboard() {
 	);
 }
 add_action( 'wp_dashboard_setup', 'chartier_antispam_dashboard' );
+
+
+/* =========================================================
+   27. Performances (itération Y)
+   Corrections issues de l'audit Lighthouse de la fiche produit :
+   - Polices hébergées dans le thème (plus de connexion à Google Fonts,
+     qui bloquait l'affichage) et préchargées : le texte s'affiche tout
+     de suite dans la bonne police.
+   - CSS de l'éditeur de blocs retirés côté site : le site utilise
+     Classic Editor et des gabarits PHP, ces fichiers ne servaient à rien
+     mais bloquaient l'affichage.
+   - Galerie produit allégée : un plat = une photo, le zoom, la visionneuse
+     et le carrousel de WooCommerce chargeaient 3 scripts pour rien.
+   ========================================================= */
+
+/** Précharge les 2 polices visibles dès le haut de page (textes et titres). */
+function chartier_preload_fonts() {
+	$dossier = get_stylesheet_directory_uri() . '/assets/fonts/';
+	foreach ( array( 'poppins-latin-400-normal.woff2', 'gloock-latin-400-normal.woff2' ) as $fichier ) {
+		printf( '<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n", esc_url( $dossier . $fichier ) );
+	}
+}
+add_action( 'wp_head', 'chartier_preload_fonts', 1 );
+
+/** Styles de l'éditeur de blocs : inutiles avec Classic Editor et nos gabarits. */
+function chartier_dequeue_block_styles() {
+	foreach ( array( 'wp-block-library', 'wp-block-library-theme', 'classic-theme-styles', 'global-styles', 'wc-blocks-style', 'storefront-gutenberg-blocks' ) as $handle ) {
+		wp_dequeue_style( $handle );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_dequeue_block_styles', 100 );
+
+/** Galerie produit sans zoom, visionneuse ni carrousel (une seule photo par plat). */
+function chartier_simple_product_gallery() {
+	remove_theme_support( 'wc-product-gallery-zoom' );
+	remove_theme_support( 'wc-product-gallery-lightbox' );
+	remove_theme_support( 'wc-product-gallery-slider' );
+}
+add_action( 'after_setup_theme', 'chartier_simple_product_gallery', 100 );
 

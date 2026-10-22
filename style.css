@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.20.0
+Version:      0.21.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–34. Styles du site : Storefront et WooCommerce
+   3–35. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -4083,5 +4083,51 @@ ul.products li.product .product-badge--star {
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+
+/* =========================================================
+   35. Polices hébergées dans le thème (itération Y)
+   Mêmes polices qu'avant (Gloock, Poppins 400/600/700), mais servies
+   par le site : pas de requête vers Google, fichiers woff2 « latin »
+   (accents, œ et € compris). font-display: swap : le texte s'affiche
+   tout de suite, puis prend la police dès qu'elle est chargée.
+   Licence SIL Open Font License (assets/fonts/OFL-*.txt).
+   ========================================================= */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/poppins-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/poppins-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/poppins-latin-700-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Gloock";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fonts/gloock-latin-400-normal.woff2") format("woff2");
+}
+
+/* Liste des options de la fiche : assez large pour « Choisir une option » */
+.single-product div.product table.variations select {
+  min-width: 16rem;
 }
 
