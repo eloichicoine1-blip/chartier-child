@@ -111,3 +111,57 @@ Dès que le correcteur aura passé des commandes en prod, on n'importe plus la b
 
 - Thème : `git checkout <commit>` dans le dossier du thème sur le serveur, ou `git revert` puis `git pull`.
 - Base : `wp db import ~/sauvegarde-<date>.sql` (faire `wp db export ~/sauvegarde-$(date +%F).sql` avant toute opération risquée).
+
+## 5. Réglages par script (depuis l'IT-10)
+
+Depuis l'IT-6, on n'importe plus la base locale en production : des commandes de test existent en prod.
+Les réglages et contenus d'une itération sont donc écrits dans un script PHP **relançable** du dossier `docs/`,
+testé en local puis rejoué en production. Chaque script vérifie l'existant avant de créer (pas de doublon).
+
+```bash
+# Local
+ddev wp eval-file wp-content/themes/chartier-child/docs/<script>.php
+# Serveur (après git pull)
+cd ~/public_html/wordpress
+wp db export ~/sauvegarde-avant-itX.sql      # sauvegarde avant chaque mise en production
+wp eval-file wp-content/themes/chartier-child/docs/<script>.php
+```
+
+| Script | Itération | Rôle |
+|---|---|---|
+| `promos-it10.php` | IT-10 | Codes promo |
+| `equipe-it11.php` | IT-11 | Membres de l'équipe et lien de menu |
+| `collections-it12.php` | IT-12 | Taxonomie « collection » et ses termes |
+| `ventes-croisees-it13.php` | IT-13 | Associations de ventes croisées |
+| `avis-it14.php` | IT-14 | Avis de démonstration (acheteurs vérifiés) |
+| `accueil-it16.php` | IT-16 | Page d'accueil statique |
+| `factures-it17.php` | IT-17 | TVA 10 % et réglages des factures PDF (logo importé) |
+| `filtres-it18.php` | IT-18 | Attribut « Régime » et widgets de filtres |
+| `livraison-poids-it19.php` | IT-19 | Tranches de livraison selon le poids |
+| `seo-it21.php` | IT-21 | Titres et méta-descriptions Yoast (puis `wp yoast index --reindex`) |
+| `legal-it22.php` | IT-22 | Mentions légales, CGV, confidentialité, case CGV |
+| `plat-star-itW.php` | IT-W | Diagnostic du plat star (lecture seule) |
+
+## 6. Extensions et traductions
+
+Extensions actives (stack du sujet + outils demandés par les itérations) :
+WooCommerce, Secure Custom Fields, Classic Editor, PDF Invoices & Packing Slips for WooCommerce (IT-17),
+Yoast SEO (IT-21), Loco Translate (IT-Z). Les extensions installées d'office par WooCommerce
+(Jetpack, WooPayments, PayPal, Pinterest, Reddit, Snapchat, Google Listings, Klaviyo, WooCommerce Services,
+Akismet, Hello Dolly) sont désactivées (IT-Z).
+
+```bash
+cd ~/public_html/wordpress
+wp language core update && wp language plugin install --all fr_FR && wp language plugin update --all && wp language theme update --all
+```
+
+Les traductions modifiées dans Loco Translate sont enregistrées dans `wp-content/languages/loco/` (emplacement
+« Personnalisé », protégé des mises à jour). Ce dossier n'est pas dans Git : la modification est refaite dans
+Loco en production.
+
+## 7. Contrôles après une mise en production
+
+- `git log --oneline -1` sur le serveur = dernier commit poussé.
+- Parcours rapide en prod : accueil, carte (filtres), fiche, panier, commande (créneau, case CGV), Mon compte.
+- Ligne ajoutée dans `docs/CHANGELOG-PROD.md`, commit « [IT-X] Journal de mise en production ».
+- IT-Y : audit Lighthouse de la fiche produit (mobile et desktop), rapports dans `07_livrables/lighthouse/`.

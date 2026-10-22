@@ -1977,9 +1977,10 @@ function chartier_preload_fonts() {
 }
 add_action( 'wp_head', 'chartier_preload_fonts', 1 );
 
-/** Styles de l'éditeur de blocs : inutiles avec Classic Editor et nos gabarits. */
+/** Styles de l'éditeur de blocs et police de Storefront : inutiles avec Classic Editor, nos gabarits et nos polices. */
 function chartier_dequeue_block_styles() {
-	foreach ( array( 'wp-block-library', 'wp-block-library-theme', 'classic-theme-styles', 'global-styles', 'wc-blocks-style', 'storefront-gutenberg-blocks' ) as $handle ) {
+	// + police Source Sans Pro de Storefront (Google Fonts, inutilisée : nos polices sont locales).
+	foreach ( array( 'wp-block-library', 'wp-block-library-theme', 'classic-theme-styles', 'global-styles', 'wc-blocks-style', 'storefront-gutenberg-blocks', 'storefront-fonts' ) as $handle ) {
 		wp_dequeue_style( $handle );
 	}
 }
@@ -1992,4 +1993,18 @@ function chartier_simple_product_gallery() {
 	remove_theme_support( 'wc-product-gallery-slider' );
 }
 add_action( 'after_setup_theme', 'chartier_simple_product_gallery', 100 );
+
+/**
+ * Récapitulatif d'une commande (e-mails, confirmation, Mon compte, facture) :
+ * la ligne « Expédition » répétait le nom du mode (« Expédition : Retrait ·
+ * Grands Boulevards … Retrait · Grands Boulevards »). Même libellé que le
+ * panier : « Retrait ou livraison », la valeur donne le mode choisi.
+ */
+function chartier_order_totals_shipping_label( $rows ) {
+	if ( isset( $rows['shipping'] ) ) {
+		$rows['shipping']['label'] = 'Retrait ou livraison :';
+	}
+	return $rows;
+}
+add_filter( 'woocommerce_get_order_item_totals', 'chartier_order_totals_shipping_label', 20 );
 
