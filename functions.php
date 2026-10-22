@@ -26,6 +26,7 @@
  * 21. Filtres de la carte : barre latérale, attribut « Régime », prix (IT-18)
  * 22. Livraison selon le poids : 3 tranches réglables (IT-19)
  * 23. Créneaux de livraison et de retrait (IT-20)
+ * 24. Back-office : liste des produits lisible (IT-21)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1714,4 +1715,29 @@ function chartier_enqueue_slot_script() {
 	}
 }
 add_action( 'wp_enqueue_scripts', 'chartier_enqueue_slot_script' );
+
+
+/* =========================================================
+   24. Back-office : liste des produits lisible (IT-21)
+   Avec Yoast SEO (4 colonnes de plus), Marques et Étiquettes, la
+   colonne « Collections » était écrasée à une lettre de large : chaque
+   ligne devenait immense (d'où l'impression qu'un seul produit
+   s'affichait). On retire les colonnes vides ou inutiles ici et on
+   donne une largeur aux collections. Le score SEO de Yoast reste.
+   ========================================================= */
+function chartier_admin_product_columns( $columns ) {
+	foreach ( array( 'wpseo-links', 'wpseo-linked', 'wpseo-score-readability', 'taxonomy-product_brand', 'product_tag' ) as $cle ) {
+		unset( $columns[ $cle ] );
+	}
+	return $columns;
+}
+add_filter( 'manage_edit-product_columns', 'chartier_admin_product_columns', 99 );
+
+function chartier_admin_product_columns_css() {
+	$ecran = get_current_screen();
+	if ( $ecran && 'edit-product' === $ecran->id ) {
+		echo '<style>.wp-list-table .column-taxonomy-collection { width: 12%; }</style>';
+	}
+}
+add_action( 'admin_head', 'chartier_admin_product_columns_css' );
 
