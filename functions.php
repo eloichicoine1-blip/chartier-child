@@ -28,6 +28,7 @@
  * 23. Créneaux de livraison et de retrait (IT-20)
  * 24. Back-office : liste des produits lisible (IT-21)
  * 25. Plat star : le plus vendu, badge et bloc d'accueil (IT-W)
+ * 26. Sécurité des formulaires : anti-spam invisible (IT-X)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1843,3 +1844,117 @@ function chartier_home_star() {
 	</section>
 	<?php
 }
+
+
+/* =========================================================
+   26. Sécurité des formulaires (itération X)
+   Anti-spam invisible, sans captcha ni service extérieur, sur
+   l'inscription (Mon compte et commande) et les avis :
+   1. Pot de miel : un champ « Site web » caché aux humains (hors écran,
+      ignoré par les lecteurs d'écran et la touche Tab). Un robot qui
+      remplit tous les champs le remplit aussi → refus.
+   2. Délai minimum : un humain met plus de 3 s à remplir le formulaire.
+      L'heure d'affichage est signée (wp_hash) : un robot ne peut pas
+      la falsifier. Trop rapide ou signature fausse → refus.
+   Le visiteur ne voit rien et n'a aucune étape en plus (US-X.2, X.3).
+   Les tentatives bloquées sont comptées et affichées dans le tableau
+   de bord (US-X.1). Les nonces de WordPress / WooCommerce restent actifs.
+   ========================================================= */
+
+const CHARTIER_SPAM_MIN_SECONDS = 3;
+
+/** Champs invisibles à ajouter dans un formulaire. */
+function chartier_antispam_fields() {
+	$heure = time();
+	?>
+	<div class="chartier-hp" aria-hidden="true">
+		<label for="chartier_site_web">Site web (laisser vide)</label>
+		<input type="text" name="chartier_site_web" id="chartier_site_web" value="" tabindex="-1" autocomplete="off">
+	</div>
+	<input type="hidden" name="chartier_ts" value="<?php echo esc_attr( $heure . '|' . wp_hash( 'chartier_ts' . $heure ) ); ?>">
+	<?php
+}
+
+/** Raison du refus, ou '' si l'envoi semble humain. */
+function chartier_antispam_reason() {
+	// phpcs:disable WordPress.Security.NonceVerification.Missing -- les formulaires ont déjà leur nonce.
+	if ( ! empty( $_POST['chartier_site_web'] ) ) {
+		return 'pot de miel rempli';
+	}
+	$ts = isset( $_POST['chartier_ts'] ) ? sanitize_text_field( wp_unslash( $_POST['chartier_ts'] ) ) : '';
+	// phpcs:enable
+	$parts = explode( '|', $ts );
+	if ( 2 !== count( $parts ) || ! hash_equals( wp_hash( 'chartier_ts' . $parts[0] ), $parts[1] ) ) {
+		return 'heure absente ou falsifiée';
+	}
+	if ( time() - (int) $parts[0] < CHARTIER_SPAM_MIN_SECONDS ) {
+		return 'envoyé trop vite';
+	}
+	return '';
+}
+
+/** Compteur des tentatives bloquées (US-X.1). */
+function chartier_antispam_count( $formulaire, $raison ) {
+	$stats                 = (array) get_option( 'chartier_spam_blocked', array() );
+	$stats[ $formulaire ]  = (int) ( $stats[ $formulaire ] ?? 0 ) + 1;
+	$stats['derniere']     = current_time( 'mysql' ) . ' (' . $formulaire . ' : ' . $raison . ')';
+	update_option( 'chartier_spam_blocked', $stats, false );
+}
+
+/* --- Inscription : Mon compte et case « Créer un compte » de la commande --- */
+add_action( 'woocommerce_register_form', 'chartier_antispam_fields' );
+add_action( 'woocommerce_after_checkout_registration_form', 'chartier_antispam_fields' );
+
+/** WooCommerce n'applique ce filtre qu'au moment de créer un compte (Mon compte ou commande). */
+function chartier_antispam_registration( $errors ) {
+	$raison = chartier_antispam_reason();
+	if ( $raison ) {
+		chartier_antispam_count( 'inscription', $raison );
+		$errors->add( 'chartier_spam', 'Votre inscription n’a pas pu être validée. Patientez quelques secondes et réessayez.' );
+	}
+	return $errors;
+}
+add_filter( 'woocommerce_registration_errors', 'chartier_antispam_registration' );
+
+/* --- Avis sur les plats (formulaire de commentaires des produits) --- */
+add_action( 'comment_form', 'chartier_antispam_review_fields' );
+function chartier_antispam_review_fields( $post_id ) {
+	if ( 'product' === get_post_type( $post_id ) ) {
+		chartier_antispam_fields();
+	}
+}
+
+/** Un avis suspect n'est pas publié : il part dans « Indésirables », que l'admin peut consulter. */
+function chartier_antispam_review( $approved, $commentdata ) {
+	if ( 'product' !== get_post_type( $commentdata['comment_post_ID'] ?? 0 ) || is_admin() ) {
+		return $approved;
+	}
+	$raison = chartier_antispam_reason();
+	if ( $raison ) {
+		chartier_antispam_count( 'avis', $raison );
+		return 'spam';
+	}
+	return $approved;
+}
+add_filter( 'pre_comment_approved', 'chartier_antispam_review', 20, 2 );
+
+/* --- Tableau de bord : bilan pour l'administrateur (US-X.1) --- */
+function chartier_antispam_dashboard() {
+	wp_add_dashboard_widget(
+		'chartier_antispam',
+		'Formulaires protégés (anti-spam)',
+		function () {
+			$stats = (array) get_option( 'chartier_spam_blocked', array() );
+			echo '<p>Inscription et avis protégés par un champ piège invisible et un délai minimum de ' . (int) CHARTIER_SPAM_MIN_SECONDS . ' s. Aucun captcha pour les visiteurs.</p>';
+			echo '<ul>';
+			echo '<li>Inscriptions bloquées : <strong>' . (int) ( $stats['inscription'] ?? 0 ) . '</strong></li>';
+			echo '<li>Avis classés indésirables : <strong>' . (int) ( $stats['avis'] ?? 0 ) . '</strong></li>';
+			echo '</ul>';
+			if ( ! empty( $stats['derniere'] ) ) {
+				echo '<p>Dernière tentative : ' . esc_html( $stats['derniere'] ) . '</p>';
+			}
+		}
+	);
+}
+add_action( 'wp_dashboard_setup', 'chartier_antispam_dashboard' );
+

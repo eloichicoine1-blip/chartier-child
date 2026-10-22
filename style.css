@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.19.0
+Version:      0.20.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–33. Styles du site : Storefront et WooCommerce
+   3–34. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -4069,3 +4069,19 @@ ul.products li.product .product-badge--star {
     padding: var(--space-2xl) var(--space-3xl);
   }
 }
+
+
+/* =========================================================
+   34. Anti-spam (itération X)
+   Champ piège sorti de l'écran (et non display:none, que certains
+   robots savent repérer). aria-hidden et tabindex=-1 dans le HTML :
+   invisible aussi pour les lecteurs d'écran et le clavier.
+   ========================================================= */
+.chartier-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
