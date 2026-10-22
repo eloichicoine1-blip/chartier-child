@@ -27,6 +27,7 @@
  * 22. Livraison selon le poids : 3 tranches réglables (IT-19)
  * 23. Créneaux de livraison et de retrait (IT-20)
  * 24. Back-office : liste des produits lisible (IT-21)
+ * 25. Plat star : le plus vendu, badge et bloc d'accueil (IT-W)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1741,3 +1742,104 @@ function chartier_admin_product_columns_css() {
 }
 add_action( 'admin_head', 'chartier_admin_product_columns_css' );
 
+
+/* =========================================================
+   25. Plat star (itération W)
+   - US-W.1 : le plat le plus vendu est identifié automatiquement grâce
+     au compteur de ventes de WooCommerce (méta « total_sales », mis à
+     jour à chaque commande payée). Les plats épuisés sont écartés.
+     Résultat gardé 1 h en cache, recalculé dès qu'une vente est
+     enregistrée ou qu'un plat est modifié.
+   - US-W.3 : badge « ★ Plat star » (.badge--star du Design System)
+     sur sa carte (carte, recherche, nouveautés…) et sur sa fiche.
+   - US-W.2 : bloc « Plat star » de l'accueil (front-page.php).
+   ========================================================= */
+
+/** Identifiant du plat le plus vendu (0 s'il n'y a encore aucune vente). */
+function chartier_star_product_id() {
+	$id = get_transient( 'chartier_star_product' );
+	if ( false !== $id ) {
+		return (int) $id;
+	}
+	$visibilite = wc_get_product_visibility_term_ids();
+	$requete    = new WP_Query(
+		array(
+			'post_type'      => 'product',
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'fields'         => 'ids',
+			'no_found_rows'  => true,
+			'meta_key'       => 'total_sales', // phpcs:ignore WordPress.DB.SlowDBQuery -- 11 plats, résultat mis en cache.
+			'orderby'        => array( 'meta_value_num' => 'DESC', 'date' => 'DESC' ),
+			'meta_query'     => array( array( 'key' => 'total_sales', 'value' => 0, 'compare' => '>', 'type' => 'NUMERIC' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
+			'tax_query'      => array( array( 'taxonomy' => 'product_visibility', 'field' => 'term_taxonomy_id', 'terms' => array( $visibilite['outofstock'] ), 'operator' => 'NOT IN' ) ), // phpcs:ignore WordPress.DB.SlowDBQuery
+		)
+	);
+	$id = $requete->posts ? (int) $requete->posts[0] : 0;
+	set_transient( 'chartier_star_product', $id, HOUR_IN_SECONDS );
+	return $id;
+}
+
+/** Le cache est vidé quand une vente est comptée ou qu'un plat change (stock, prix…). */
+function chartier_star_flush() {
+	delete_transient( 'chartier_star_product' );
+}
+add_action( 'woocommerce_recorded_sales', 'chartier_star_flush' );
+add_action( 'woocommerce_update_product', 'chartier_star_flush' );
+add_action( 'woocommerce_product_set_stock_status', 'chartier_star_flush' );
+
+function chartier_is_star( $product ) {
+	return $product instanceof WC_Product && $product->get_id() === chartier_star_product_id();
+}
+
+function chartier_star_badge_html() {
+	return '<span class="badge badge--star"><span aria-hidden="true">★ </span>Plat star</span>';
+}
+
+/** US-W.3 : badge sur la carte du plat (toutes les listes de produits). */
+function chartier_star_badge_loop() {
+	global $product;
+	if ( chartier_is_star( $product ) ) {
+		echo str_replace( 'badge badge--star', 'badge badge--star product-badge--star', chartier_star_badge_html() ); // phpcs:ignore WordPress.Security.EscapeOutput -- HTML fixe.
+	}
+}
+add_action( 'woocommerce_before_shop_loop_item_title', 'chartier_star_badge_loop', 8 );
+
+/** US-W.3 : badge sur la fiche, au-dessus du titre (comme le badge Promo). */
+function chartier_star_badge_single() {
+	global $product;
+	if ( chartier_is_star( $product ) ) {
+		echo chartier_star_badge_html(); // phpcs:ignore WordPress.Security.EscapeOutput -- HTML fixe.
+	}
+}
+add_action( 'woocommerce_single_product_summary', 'chartier_star_badge_single', 3 );
+
+/**
+ * US-W.2 : bloc « Plat star » de l'accueil, comme la maquette de conception (v1.0) :
+ * bandeau noir, photo à gauche ; badge, nom, description, prix et bouton à droite.
+ * En mobile : la photo passe en fond de la carte, assombrie, texte par-dessus.
+ * Rien ne s'affiche tant qu'aucun plat n'a été vendu.
+ */
+function chartier_home_star() {
+	$product = wc_get_product( chartier_star_product_id() );
+	if ( ! $product ) {
+		return;
+	}
+	$texte = $product->get_short_description() ? $product->get_short_description() : $product->get_description();
+	?>
+	<section class="home-section home-star" aria-labelledby="home-star">
+		<div class="home-star__media">
+			<?php echo $product->get_image( 'woocommerce_single', array( 'alt' => '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+		</div>
+		<div class="home-star__body">
+			<?php echo chartier_star_badge_html(); // phpcs:ignore WordPress.Security.EscapeOutput ?>
+			<h2 class="home-star__title" id="home-star"><a href="<?php echo esc_url( $product->get_permalink() ); ?>"><?php echo esc_html( $product->get_name() ); ?></a></h2>
+			<p class="home-star__text"><?php echo esc_html( wp_trim_words( wp_strip_all_tags( $texte ), 24 ) ); ?></p>
+			<div class="home-star__buy">
+				<span class="home-star__price"><?php echo $product->get_price_html(); // phpcs:ignore WordPress.Security.EscapeOutput ?></span>
+				<a class="button home-star__button" href="<?php echo esc_url( $product->add_to_cart_url() ); ?>"><?php echo esc_html( $product->add_to_cart_text() ); ?></a>
+			</div>
+		</div>
+	</section>
+	<?php
+}

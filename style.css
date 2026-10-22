@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.18.0
+Version:      0.19.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–32. Styles du site : Storefront et WooCommerce
+   3–33. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3929,3 +3929,143 @@ form.checkout input[type="checkbox"] {
   margin-top: var(--space-l);
 }
 
+
+/* =========================================================
+   33. Plat star (itération W)
+   Badge .badge--star du Design System (contour rouge) et bloc de
+   l'accueil : photo à gauche, texte à droite, fond papier.
+   ========================================================= */
+.badge--star {
+  gap: 0.35em; /* l'espace après ★ disparaît dans un inline-flex */
+  border-color: var(--color-primary);
+  background-color: var(--ch-color-neutral-white);
+  color: var(--color-primary);
+}
+
+/* Sur les cartes : en haut à droite (le badge Promo ou Épuisé reste à gauche) */
+ul.products li.product .product-badge--star {
+  position: absolute;
+  top: var(--space-m);
+  right: var(--space-m);
+  z-index: 1;
+  margin: 0;
+}
+
+/* Sur la fiche : au-dessus du titre */
+.single-product .summary > .badge--star {
+  margin-bottom: var(--space-m);
+}
+
+/* Bloc de l'accueil, maquette v1.0 : bandeau noir, photo à gauche (desktop) ;
+   en mobile, photo en fond assombri et texte blanc par-dessus. */
+.home-star {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background-color: var(--color-dark);
+  color: var(--color-on-primary);
+}
+
+.home-star__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-star__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-m);
+  padding: var(--space-xl) var(--space-l);
+}
+
+/* Sur fond noir : badge à contour rouge, fond transparent */
+.home-star .badge--star {
+  background-color: transparent;
+}
+
+.home-star__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: 400;
+}
+
+.home-star__title a,
+.home-star__title a:hover {
+  color: var(--color-on-primary);
+  text-decoration: none;
+}
+
+.home-star__text {
+  margin: 0;
+  max-width: 30rem;
+  font-size: var(--text-s-size);
+  line-height: var(--text-s-lh);
+}
+
+.home-star__buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-m);
+}
+
+.home-star__price {
+  font-size: var(--text-price-size);
+  line-height: var(--text-price-lh);
+  font-weight: 600;
+}
+
+.home-star__price del {
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* Mobile : la photo devient le fond de la carte */
+@media (max-width: 767px) {
+  .home-star__media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .home-star__media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(17, 17, 17, 0.9), rgba(17, 17, 17, 0.35));
+  }
+
+  .home-star__body {
+    position: relative;
+    min-height: 16rem;
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-star {
+    grid-template-columns: 47% 1fr;
+    min-height: 22rem;
+  }
+
+  /* La photo remplit sa colonne sans imposer sa hauteur : c'est le texte qui
+     décide de la hauteur du bandeau, comme sur la maquette (bandeau bas). */
+  .home-star__media {
+    position: relative;
+  }
+
+  .home-star__media img {
+    position: absolute;
+    inset: 0;
+  }
+
+  .home-star__body {
+    padding: var(--space-2xl) var(--space-3xl);
+  }
+}

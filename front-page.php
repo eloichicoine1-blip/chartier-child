@@ -4,8 +4,8 @@
  * (Réglages → Lecture). Hiérarchie des templates : front-page.php.
  *
  * Sections de la maquette : accroche, la carte, nouveautés (les 3 derniers
- * produits, US-16.1), où retirer sa commande. Le bloc « Plat star »
- * viendra avec l'itération indépendante W.
+ * produits, US-16.1), où retirer sa commande. Le bloc « Plat star » (le plus
+ * vendu, itération W) est placé entre les nouveautés et « Où retirer », comme la maquette (functions.php §25).
  *
  * @package chartier-child
  */
@@ -67,6 +67,8 @@ $carte = wc_get_page_permalink( 'shop' );
 				</div>
 			</section>
 		<?php endif; ?>
+
+		<?php chartier_home_star(); // Itération W : le plat le plus vendu. ?>
 
 		<section class="home-section home-restaurants" aria-labelledby="home-retrait">
 			<div class="home-section__head">
