@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.17.0
+Version:      0.18.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–31. Styles du site : Storefront et WooCommerce
+   3–32. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -2096,12 +2096,16 @@ form.checkout .select2-container .select2-selection--single .select2-selection__
    au pays réécrit leurs classes.
    Le code postal reste visible : c'est lui qui détermine la zone (Paris → livraison
    proposée). Masqué, un client hors Paris par défaut ne verrait jamais la livraison. */
+/* !important justifié : pour un visiteur non connecté, le script d'adresse de
+   WooCommerce (address-i18n.js) réaffiche ces champs avec un style en ligne
+   « display: block », qui l'emporterait sur n'importe quelle règle du fichier.
+   Seul !important passe devant un style en ligne. (Correctif IT-22.) */
 form.checkout.is-pickup #billing_country_field,
 form.checkout.is-pickup #billing_address_1_field,
 form.checkout.is-pickup #billing_address_2_field,
 form.checkout.is-pickup #billing_city_field,
 form.checkout.is-pickup #billing_state_field {
-  display: none;
+  display: none !important;
 }
 
 .pickup-instructions {
@@ -3883,5 +3887,45 @@ body.home.no-wc-breadcrumb .site-header {
   border-radius: var(--radius-card);
   background-color: var(--color-paper);
   font-weight: 600;
+}
+
+
+/* =========================================================
+   32. Pages de contenu : mentions légales, CGV, confidentialité (IT-22)
+   Même titre que le panier et la commande (Gloock), intertitres en H3
+   du DS au lieu des grands h2 de Storefront, texte limité à une
+   largeur de lecture confortable.
+   ========================================================= */
+.page-template-default:not(.woocommerce-page) .entry-title {
+  margin: 0 0 var(--space-xl);
+  font-family: var(--font-heading);
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-lh);
+  font-weight: 400;
+}
+
+.page-template-default:not(.woocommerce-page) .entry-content {
+  max-width: 48rem;
+}
+
+.page-template-default:not(.woocommerce-page) .entry-content h2 {
+  margin: var(--space-2xl) 0 var(--space-s);
+  padding: 0;
+  font-size: var(--text-h3-size);
+  line-height: var(--text-h3-lh);
+  font-weight: 600;
+}
+
+/* Cases à cocher de la commande (CGV, créer un compte) : taille et rouge du DS */
+form.checkout input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0 var(--space-s) 0 0;
+  vertical-align: middle;
+  accent-color: var(--color-primary);
+}
+
+.woocommerce-terms-and-conditions-wrapper .form-row {
+  margin-top: var(--space-l);
 }
 
