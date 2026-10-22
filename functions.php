@@ -24,6 +24,7 @@
  * 19. Frais de préparation (IT-15)
  * 20. Accueil : derniers produits, tuiles de la carte (IT-16)
  * 21. Filtres de la carte : barre latérale, attribut « Régime », prix (IT-18)
+ * 22. Livraison selon le poids : 3 tranches réglables (IT-19)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -514,7 +515,15 @@ add_filter( 'woocommerce_shipping_package_name', 'chartier_shipping_package_name
  */
 function chartier_shipping_method_label( $label, $method ) {
 	$cost = (float) $method->get_cost();
+	// IT-19 : get_cost() est le prix HT ; le client doit voir le prix TTC qu'il paiera.
+	if ( WC()->cart && WC()->cart->display_prices_including_tax() ) {
+		$cost += array_sum( (array) $method->get_taxes() );
+	}
 	$note = $cost > 0 ? wc_price( $cost ) : 'Gratuit';
+	$weight = $method->get_meta_data()['Poids de la commande'] ?? '';
+	if ( $cost > 0 && '' !== $weight ) {
+		$note .= ' · commande de ' . esc_html( $weight ); // IT-19 : le client voit sur quoi repose le tarif.
+	}
 
 	return sprintf(
 		'<span class="shipping-method__name">%s</span><span class="shipping-method__note">%s</span>',
@@ -1367,4 +1376,131 @@ function chartier_filters_sidebar() {
 	</script>
 	<?php
 }
+
+
+/* =========================================================
+   22. Livraison selon le poids (IT-19)
+   - US-19.2 : 3 tranches réglables dans WooCommerce › Réglages ›
+     Expédition › Options d'expédition (même principe que les
+     frais de préparation de l'IT-15). Tarifs saisis TTC.
+   - US-19.1 : le prix du forfait « Livraison à Paris » (flat_rate)
+     est remplacé par celui de la tranche du poids du panier.
+     Les retraits restent gratuits.
+   - US-19.3 : le prix TTC et le poids s'affichent sous le mode
+     de livraison, dans le panier et la commande (section 10).
+   ========================================================= */
+
+/** Valeurs par défaut des tranches (kg, € TTC). */
+function chartier_weight_tiers_defaults() {
+	return array(
+		'chartier_weight_tier1_max'   => '1',
+		'chartier_weight_tier1_price' => '4.90',
+		'chartier_weight_tier2_max'   => '3',
+		'chartier_weight_tier2_price' => '6.90',
+		'chartier_weight_tier3_price' => '9.90',
+	);
+}
+
+/** Les 3 tranches réglées dans le back-office : poids maximum (kg) et tarif TTC. */
+function chartier_weight_tiers() {
+	$d   = chartier_weight_tiers_defaults();
+	$get = function ( $key ) use ( $d ) {
+		return (float) wc_format_decimal( get_option( $key, $d[ $key ] ) );
+	};
+	return array(
+		array( 'max' => $get( 'chartier_weight_tier1_max' ), 'price' => $get( 'chartier_weight_tier1_price' ) ),
+		array( 'max' => $get( 'chartier_weight_tier2_max' ), 'price' => $get( 'chartier_weight_tier2_price' ) ),
+		array( 'max' => INF, 'price' => $get( 'chartier_weight_tier3_price' ) ),
+	);
+}
+
+/** Tranche correspondant à un poids en kg. */
+function chartier_weight_tier( $kg ) {
+	$tiers = chartier_weight_tiers();
+	foreach ( $tiers as $tier ) {
+		if ( $kg <= $tier['max'] ) {
+			return $tier;
+		}
+	}
+	return end( $tiers );
+}
+
+/** Poids d'un colis en kg (les poids des plats sont saisis dans l'unité de la boutique). */
+function chartier_package_weight( $package ) {
+	$weight = 0;
+	foreach ( $package['contents'] as $item ) {
+		$weight += (float) $item['data']->get_weight() * $item['quantity'];
+	}
+	return wc_get_weight( $weight, 'kg' );
+}
+
+/** Poids lisible : « 1,2 kg » (espace insécable : « kg » ne passe jamais seul à la ligne). */
+function chartier_format_kg( $kg ) {
+	return wc_format_localized_decimal( rtrim( rtrim( number_format( $kg, 2, '.', '' ), '0' ), '.' ) ) . "\u{00A0}kg";
+}
+
+/** US-19.1 : prix de la livraison selon la tranche de poids. */
+function chartier_weight_based_rates( $rates, $package ) {
+	$kg   = chartier_package_weight( $package );
+	$tier = chartier_weight_tier( $kg );
+	foreach ( $rates as $rate ) {
+		if ( 'flat_rate' !== $rate->get_method_id() ) {
+			continue; // Retraits : toujours gratuits.
+		}
+		$ttc   = $tier['price'];
+		$taxes = array();
+		if ( wc_tax_enabled() && array_sum( (array) $rate->get_taxes() ) > 0 ) {
+			// Livraison soumise à la TVA (réglage du mode). Tarif saisi TTC : on en retire la TVA pour que le HT et la TVA de la facture (IT-17) soient justes.
+			$taxes = WC_Tax::calc_inclusive_tax( $ttc, WC_Tax::get_shipping_tax_rates() );
+		}
+		$rate->set_cost( $ttc - array_sum( $taxes ) );
+		$rate->set_taxes( $taxes );
+		$rate->add_meta_data( 'Poids de la commande', chartier_format_kg( $kg ) ); // Repris dans la commande (back-office, e-mail).
+	}
+	return $rates;
+}
+add_filter( 'woocommerce_package_rates', 'chartier_weight_based_rates', 20, 2 );
+
+/** US-19.2 : section « Tarifs de livraison selon le poids » dans les options d'expédition. */
+function chartier_weight_tiers_settings( $settings ) {
+	$d   = chartier_weight_tiers_defaults();
+	$new = array();
+	foreach ( $settings as $setting ) {
+		$new[] = $setting;
+		if ( isset( $setting['type'], $setting['id'] ) && 'sectionend' === $setting['type'] && 'shipping_options' === $setting['id'] ) {
+			$new[] = array(
+				'title' => 'Tarifs de livraison selon le poids',
+				'type'  => 'title',
+				'desc'  => 'S\'applique à « Livraison à Paris » : le tarif dépend du poids total de la commande. Tarifs TTC, tels que le client les voit. Les retraits restent gratuits.',
+				'id'    => 'chartier_weight_tiers',
+			);
+			$fields = array(
+				'chartier_weight_tier1_max'   => array( 'Tranche 1 : jusqu\'à (kg)', 'wc_input_decimal' ),
+				'chartier_weight_tier1_price' => array( 'Tranche 1 : tarif (€ TTC)', 'wc_input_price' ),
+				'chartier_weight_tier2_max'   => array( 'Tranche 2 : jusqu\'à (kg)', 'wc_input_decimal' ),
+				'chartier_weight_tier2_price' => array( 'Tranche 2 : tarif (€ TTC)', 'wc_input_price' ),
+				'chartier_weight_tier3_price' => array( 'Tranche 3 : au-delà, tarif (€ TTC)', 'wc_input_price' ),
+			);
+			foreach ( $fields as $id => $field ) {
+				$new[] = array(
+					'title'   => $field[0],
+					'id'      => $id,
+					'type'    => 'text',
+					'class'   => $field[1],
+					'default' => $d[ $id ],
+					'css'     => 'width: 80px;',
+				);
+			}
+			$new[] = array( 'type' => 'sectionend', 'id' => 'chartier_weight_tiers' );
+		}
+	}
+	return $new;
+}
+add_filter( 'woocommerce_get_settings_shipping', 'chartier_weight_tiers_settings', 20 );
+
+/** Après un changement de tarifs, WooCommerce doit recalculer les prix de livraison mis en cache. */
+function chartier_weight_tiers_flush_cache() {
+	WC_Cache_Helper::get_transient_version( 'shipping', true );
+}
+add_action( 'woocommerce_update_options_shipping_options', 'chartier_weight_tiers_flush_cache' );
 
