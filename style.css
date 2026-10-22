@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.15.0
+Version:      0.16.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–29. Styles du site : Storefront et WooCommerce
+   3–30. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3634,3 +3634,198 @@ body.home.no-wc-breadcrumb .site-header {
   color: var(--color-text-muted);
   white-space: nowrap;
 }
+
+
+/* =========================================================
+   30. Filtres de la carte (IT-18)
+   Widgets natifs de WooCommerce (prix, « Régime », filtres
+   actifs) dans la colonne de gauche (classe left-sidebar de
+   Storefront). On garde leurs classes et on ne redéfinit que
+   l'apparence, avec les variables du Design System.
+   ========================================================= */
+
+/* Titres des filtres : même style que les libellés du DS */
+.chartier-filters .widget {
+  margin: 0 0 var(--space-2xl);
+}
+
+.chartier-filters .widget-title {
+  margin: 0 0 var(--space-m);
+  padding: 0 0 var(--space-s);
+  border-bottom: 1px solid var(--color-border-strong);
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+/* Listes : on retire les puces et le retrait de Storefront */
+.chartier-filters .widget_layered_nav ul li,
+.chartier-filters .widget_layered_nav_filters ul li {
+  margin: 0;
+  padding-left: 0;
+}
+
+.chartier-filters .widget_layered_nav ul li::before,
+.chartier-filters .widget_layered_nav_filters ul li::before {
+  content: none;
+  display: none;
+}
+
+/* Régime : cases à cocher du DS */
+.chartier-filters .woocommerce-widget-layered-nav-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  padding: var(--space-xs) 0;
+  font-size: var(--text-m-size);
+  line-height: var(--text-m-lh);
+}
+
+.chartier-filters .woocommerce-widget-layered-nav-list__item a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-s);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.chartier-filters .woocommerce-widget-layered-nav-list__item a::before {
+  content: "";
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--color-border-field);
+  border-radius: var(--radius-field);
+  background-color: var(--ch-color-neutral-white);
+}
+
+.chartier-filters .woocommerce-widget-layered-nav-list__item a:hover::before {
+  border-color: var(--color-border-strong);
+}
+
+.chartier-filters .woocommerce-widget-layered-nav-list__item--chosen a::before {
+  border-color: var(--color-primary);
+  background: var(--color-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3 3 7-7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+
+.chartier-filters .woocommerce-widget-layered-nav-list__item .count {
+  margin-left: auto;
+  font-size: var(--text-s-size);
+  color: var(--color-text-muted);
+}
+
+/* Prix : curseur rouge du DS */
+.chartier-filters .widget_price_filter .price_slider_wrapper .ui-widget-content {
+  background: var(--color-border);
+}
+
+.chartier-filters .widget_price_filter .ui-slider .ui-slider-range {
+  background: var(--color-primary);
+}
+
+.chartier-filters .widget_price_filter .ui-slider .ui-slider-handle {
+  width: 1.25em;
+  height: 1.25em;
+  top: -0.375em;
+  border: 2px solid var(--ch-color-neutral-white);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+  cursor: grab;
+}
+
+.chartier-filters .widget_price_filter .price_slider_amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-top: var(--space-l);
+  text-align: left;
+  font-size: var(--text-s-size);
+}
+
+.chartier-filters .widget_price_filter .price_slider_amount .button {
+  float: none;
+  width: auto;
+}
+
+/* Filtres actifs : pastilles avec une croix */
+.chartier-filters .widget_layered_nav_filters ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+}
+
+.chartier-filters .widget_layered_nav_filters ul li a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-m);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-s-size);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.chartier-filters .widget_layered_nav_filters ul li a::after {
+  content: "×";
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.chartier-filters .widget_layered_nav_filters ul li a:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Bouton « Filtrer les plats » : mobile seulement, style secondaire */
+.chartier-filters__toggle {
+  width: 100%;
+  margin-bottom: var(--space-l);
+  border: 1px solid var(--color-border-strong);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+/* Survol seulement sur les écrans avec souris : au doigt, il resterait « collé » après le toucher. */
+@media (hover: hover) {
+  .chartier-filters__toggle:hover {
+    background-color: var(--color-text);
+    color: var(--ch-color-neutral-white);
+  }
+}
+
+/* Mobile : filtres au-dessus des plats, repliés une fois le JS chargé */
+@media (max-width: 767px) {
+  .has-filters .site-content .col-full {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .has-filters .content-area {
+    order: 1;
+  }
+
+  .chartier-filters.is-ready:not(.is-open) .chartier-filters__panel {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .chartier-filters__toggle {
+    display: none;
+  }
+
+  /* Avec la colonne de filtres, les tuiles sont plus étroites :
+     « Desserts » en taille Display se coupait au milieu du mot. */
+  .has-filters .category-tile:not(.collection-tile) .category-tile__title {
+    font-size: var(--text-h1-size);
+    line-height: 1.1;
+  }
+}
+

@@ -23,6 +23,7 @@
  * 18. Avis clients (IT-14)
  * 19. Frais de préparation (IT-15)
  * 20. Accueil : derniers produits, tuiles de la carte (IT-16)
+ * 21. Filtres de la carte : barre latérale, attribut « Régime », prix (IT-18)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -82,9 +83,13 @@ add_action( 'wp_enqueue_scripts', 'chartier_remove_storefront_customizer_css', 1
 
 /**
  * Pages WooCommerce en pleine largeur à l'IT-2.
- * La colonne de filtres de la maquette arrivera avec l'IT-18.
+ * Exception IT-18 : la carte, ses catégories, collections et la recherche de
+ * plats ont la colonne de filtres (section 21).
  */
 function chartier_is_shop_context() {
+	if ( chartier_is_catalog_context() ) {
+		return false; // Carte (IT-18) : colonne de filtres à gauche, voir section 21.
+	}
 	if ( is_post_type_archive( 'membre' ) || is_singular( 'membre' ) ) {
 		return true; // Pages de l'équipe (IT-11) : pleine largeur, sans barre latérale.
 	}
@@ -1253,3 +1258,113 @@ function chartier_home_category_tiles() {
 	}
 	echo '</ul>';
 }
+
+
+/* =========================================================
+   21. Filtres de la carte (IT-18)
+   Colonne « Filtres de la carte » à gauche sur la carte, ses
+   catégories, ses collections et la recherche de plats.
+   Widgets natifs de WooCommerce (prix, attribut global
+   « Régime », filtres actifs), placés par docs/filtres-it18.php.
+   En mobile : les filtres passent au-dessus des plats, repliés
+   derrière un bouton « Filtrer les plats » (ouverts sans JS).
+   ========================================================= */
+
+/** Pages de la carte : boutique, catégories, collections, recherche de plats. */
+function chartier_is_catalog_context() {
+	if ( ! function_exists( 'is_woocommerce' ) ) {
+		return false;
+	}
+	if ( is_shop() || is_product_taxonomy() ) {
+		return true;
+	}
+	return is_search() && 'product' === get_query_var( 'post_type' );
+}
+
+/** Zone de widgets dédiée (Apparence › Widgets › « Filtres de la carte »). */
+function chartier_register_filters_sidebar() {
+	register_sidebar(
+		array(
+			'name'          => 'Filtres de la carte',
+			'id'            => 'chartier-filtres',
+			'description'   => 'Colonne de filtres de la carte (IT-18) : prix, régime, filtres actifs.',
+			'before_widget' => '<section id="%1$s" class="widget %2$s">',
+			'after_widget'  => '</section>',
+			'before_title'  => '<h2 class="widget-title">',
+			'after_title'   => '</h2>',
+		)
+	);
+}
+add_action( 'widgets_init', 'chartier_register_filters_sidebar' );
+
+/** Sur la carte, la barre latérale de Storefront est remplacée par nos filtres. */
+function chartier_catalog_sidebar_setup() {
+	if ( chartier_is_catalog_context() ) {
+		remove_action( 'storefront_sidebar', 'storefront_get_sidebar', 10 );
+		add_action( 'storefront_sidebar', 'chartier_filters_sidebar', 10 );
+	}
+}
+add_action( 'wp', 'chartier_catalog_sidebar_setup' );
+
+/** Colonne à gauche (classe « left-sidebar » de Storefront) ; pleine largeur s'il n'y a aucun widget. */
+function chartier_catalog_body_class( $classes ) {
+	if ( ! chartier_is_catalog_context() ) {
+		return $classes;
+	}
+	$classes = array_diff( $classes, array( 'right-sidebar', 'left-sidebar', 'storefront-full-width-content' ) );
+	if ( is_active_sidebar( 'chartier-filtres' ) ) {
+		$classes[] = 'left-sidebar';
+		$classes[] = 'has-filters';
+	} else {
+		$classes[] = 'storefront-full-width-content';
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'chartier_catalog_body_class', 20 );
+
+/** Nombre de filtres appliqués (régime choisi, prix min ou max), affiché sur le bouton mobile. */
+function chartier_active_filters_count() {
+	$count = 0;
+	foreach ( WC_Query::get_layered_nav_chosen_attributes() as $attribute ) {
+		$count += count( $attribute['terms'] );
+	}
+	foreach ( array( 'min_price', 'max_price' ) as $key ) {
+		if ( isset( $_GET[ $key ] ) && '' !== $_GET[ $key ] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$count++;
+		}
+	}
+	return $count;
+}
+
+function chartier_filters_sidebar() {
+	if ( ! is_active_sidebar( 'chartier-filtres' ) ) {
+		return;
+	}
+	$count = chartier_active_filters_count();
+	?>
+	<aside id="secondary" class="widget-area chartier-filters" aria-label="Filtres de la carte">
+		<button type="button" class="button chartier-filters__toggle" aria-expanded="false" aria-controls="chartier-filters-panel">
+			Filtrer les plats<?php echo $count ? ' (' . (int) $count . ')' : ''; ?>
+		</button>
+		<div id="chartier-filters-panel" class="chartier-filters__panel">
+			<?php dynamic_sidebar( 'chartier-filtres' ); ?>
+		</div>
+	</aside>
+	<script>
+	( function () {
+		var aside = document.querySelector( '.chartier-filters' );
+		var button = aside && aside.querySelector( '.chartier-filters__toggle' );
+		if ( ! button ) {
+			return;
+		}
+		aside.classList.add( 'is-ready' ); // Sans JS, les filtres restent ouverts.
+		button.addEventListener( 'click', function () {
+			var open = button.getAttribute( 'aria-expanded' ) === 'true';
+			button.setAttribute( 'aria-expanded', String( ! open ) );
+			aside.classList.toggle( 'is-open', ! open );
+		} );
+	} )();
+	</script>
+	<?php
+}
+
