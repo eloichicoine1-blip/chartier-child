@@ -4,7 +4,7 @@ Theme URI:    https://github.com/eloichicoine1-blip/chartier-child
 Description:  Thème enfant de Storefront pour le click & collect du Bouillon Chartier. Projet pédagogique SAé 3.01, BUT MMI Limoges. Non affilié au Bouillon Chartier.
 Author:       Eloi Chicoine
 Template:     storefront
-Version:      0.16.0
+Version:      0.17.0
 Text Domain:  chartier-child
 */
 
@@ -13,7 +13,7 @@ Text Domain:  chartier-child
    1–2. Variables : copiées de la page Design System
         (https://eloichicoine1-blip.github.io/chartier-design-system/),
         elles-mêmes issues des variables Figma.
-   3–30. Styles du site : Storefront et WooCommerce
+   3–31. Styles du site : Storefront et WooCommerce
         habillés avec les variables secondaires.
    ========================================================= */
 
@@ -3827,5 +3827,61 @@ body.home.no-wc-breadcrumb .site-header {
     font-size: var(--text-h1-size);
     line-height: 1.1;
   }
+}
+
+
+/* =========================================================
+   31. Créneaux de livraison et de retrait (IT-20)
+   Bloc « Quand ? » de la commande : mêmes listes que les autres
+   champs ; le titre change selon le mode (is-pickup).
+   ========================================================= */
+
+.delivery-slot {
+  margin: var(--space-xl) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.delivery-slot__title {
+  margin: 0 0 var(--space-m);
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-label-size);
+  line-height: var(--text-label-lh);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.delivery-slot__pickup,
+.delivery-slot.is-pickup .delivery-slot__delivery {
+  display: none;
+}
+
+.delivery-slot.is-pickup .delivery-slot__pickup {
+  display: inline;
+}
+
+.delivery-slot [hidden] {
+  display: none;
+}
+
+.delivery-slot__note {
+  clear: both;
+  margin: 0;
+  padding-top: var(--space-xs);
+  font-size: var(--text-s-size);
+  color: var(--color-text-muted);
+}
+
+/* Confirmation et Mon compte : même cadre que les instructions de retrait */
+.delivery-slot-summary {
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-l);
+  border: 2px dashed var(--color-border-field);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper);
+  font-weight: 600;
 }
 

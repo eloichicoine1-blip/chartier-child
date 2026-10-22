@@ -25,6 +25,7 @@
  * 20. Accueil : derniers produits, tuiles de la carte (IT-16)
  * 21. Filtres de la carte : barre latérale, attribut « Régime », prix (IT-18)
  * 22. Livraison selon le poids : 3 tranches réglables (IT-19)
+ * 23. Créneaux de livraison et de retrait (IT-20)
  * (IT-10 Promotions : codes créés dans le back-office, libellé « Appliquer » en section 10, styles en CSS section 22)
  *
  * @package chartier-child
@@ -1503,4 +1504,214 @@ function chartier_weight_tiers_flush_cache() {
 	WC_Cache_Helper::get_transient_version( 'shipping', true );
 }
 add_action( 'woocommerce_update_options_shipping_options', 'chartier_weight_tiers_flush_cache' );
+
+
+/* =========================================================
+   23. Créneaux de livraison et de retrait (IT-20)
+   - Bloc « Quand ? » dans la commande : un jour (aujourd'hui + 6 jours)
+     et un créneau, dont la liste dépend du mode choisi (classe is-pickup
+     posée par assets/js/commande.js, IT-6).
+   - Aujourd'hui : pas de créneau qui commence dans moins d'1 h
+     (temps de préparation), vérifié aussi côté serveur.
+   - Le créneau est enregistré dans la commande et repris partout :
+     confirmation, Mon compte, e-mails, back-office, facture PDF.
+   ========================================================= */
+
+/** Créneaux proposés selon le mode (« retrait » ou « livraison »), heures de début–fin. */
+function chartier_slots( $mode ) {
+	$slots = array(
+		'retrait'   => array( '11:30-12:30', '12:30-13:30', '13:30-14:30', '18:30-19:30', '19:30-20:30', '20:30-21:30', '21:30-22:30' ),
+		'livraison' => array( '12:00-13:00', '13:00-14:00', '19:00-20:00', '20:00-21:00', '21:00-22:00' ),
+	);
+	return isset( $slots[ $mode ] ) ? $slots[ $mode ] : array();
+}
+
+/** « 12:30-13:30 » → « 12h30–13h30 » ; « 12:00-13:00 » → « 12h–13h ». */
+function chartier_slot_label( $slot ) {
+	$heure = function ( $t ) {
+		list( $h, $m ) = explode( ':', $t );
+		return (int) $h . 'h' . ( '00' === $m ? '' : $m );
+	};
+	list( $debut, $fin ) = explode( '-', $slot );
+	return $heure( $debut ) . '–' . $heure( $fin );
+}
+
+/** Heure minimale d'un créneau aujourd'hui : maintenant + 1 h de préparation. */
+function chartier_slot_min_time() {
+	return current_datetime()->modify( '+1 hour' );
+}
+
+/** Le créneau est-il encore réservable ? */
+function chartier_slot_is_open( $date, $slot ) {
+	$debut = DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $date . ' ' . strtok( $slot, '-' ), wp_timezone() );
+	return $debut && $debut >= chartier_slot_min_time();
+}
+
+/** Les 7 jours proposés : clé Y-m-d → « Aujourd'hui, jeudi 22 octobre ». */
+function chartier_slot_days() {
+	$jours = array();
+	$today = current_datetime()->setTime( 0, 0 );
+	for ( $i = 0; $i < 7; $i++ ) {
+		$jour  = $today->modify( "+$i day" );
+		$label = wp_date( 'l j F', $jour->getTimestamp() );
+		if ( 0 === $i ) {
+			// Aujourd'hui seulement s'il reste au moins un créneau, quel que soit le mode.
+			$reste = false;
+			foreach ( array_merge( chartier_slots( 'retrait' ), chartier_slots( 'livraison' ) ) as $slot ) {
+				$reste = $reste || chartier_slot_is_open( $jour->format( 'Y-m-d' ), $slot );
+			}
+			if ( ! $reste ) {
+				continue;
+			}
+			$label = 'Aujourd\'hui, ' . $label;
+		} elseif ( 1 === $i ) {
+			$label = 'Demain, ' . $label;
+		}
+		$jours[ $jour->format( 'Y-m-d' ) ] = $label;
+	}
+	return $jours;
+}
+
+/** Une liste du DS, au balisage des champs WooCommerce. */
+function chartier_slot_select( $name, $label, $options, $selected, $classes, $mode = '' ) {
+	printf(
+		'<p class="form-row validate-required %1$s" id="%2$s_field"%3$s><label for="%2$s">%4$s&nbsp;<abbr class="required" title="obligatoire">*</abbr></label><span class="woocommerce-input-wrapper"><select name="%2$s" id="%2$s" class="select"%5$s%6$s>',
+		esc_attr( $classes ),
+		esc_attr( $name ),
+		$mode ? ' data-mode="' . esc_attr( $mode ) . '"' . ( ( 'retrait' === $mode ) !== chartier_is_pickup_chosen() ? ' hidden' : '' ) : '',
+		esc_html( $label ),
+		$mode ? ' data-slots' : '',
+		$mode && ( ( 'retrait' === $mode ) !== chartier_is_pickup_chosen() ) ? ' disabled' : ''
+	);
+	echo '<option value="">' . ( $mode ? 'Choisir un créneau' : 'Choisir un jour' ) . '</option>';
+	foreach ( $options as $value => $text ) {
+		printf(
+			'<option value="%1$s"%2$s%3$s>%4$s</option>',
+			esc_attr( $value ),
+			$mode ? ' data-start="' . esc_attr( strtok( $value, '-' ) ) . '"' : '',
+			selected( $selected, $value, false ),
+			esc_html( $text )
+		);
+	}
+	echo '</select></span></p>';
+}
+
+/** Bloc « Quand ? » sous les coordonnées (et sous les instructions de retrait). */
+function chartier_slot_fields( $checkout ) {
+	$min = chartier_slot_min_time();
+	echo '<fieldset class="delivery-slot" data-today="' . esc_attr( current_datetime()->format( 'Y-m-d' ) ) . '" data-min="' . esc_attr( $min->format( 'H:i' ) ) . '">';
+	echo '<legend class="delivery-slot__title"><span class="delivery-slot__pickup">Quand passez-vous ?</span><span class="delivery-slot__delivery">Quand vous livrer ?</span></legend>';
+	chartier_slot_select( 'chartier_slot_date', 'Jour', chartier_slot_days(), $checkout->get_value( 'chartier_slot_date' ), 'form-row-first' );
+	foreach ( array( 'retrait' => 'Créneau de retrait', 'livraison' => 'Créneau de livraison' ) as $mode => $label ) {
+		$options = array();
+		foreach ( chartier_slots( $mode ) as $slot ) {
+			$options[ $slot ] = chartier_slot_label( $slot );
+		}
+		chartier_slot_select( 'chartier_slot_' . $mode, $label, $options, $checkout->get_value( 'chartier_slot_' . $mode ), 'form-row-last', $mode );
+	}
+	echo '<p class="delivery-slot__note">Aujourd\'hui, les créneaux commencent au plus tôt 1&nbsp;h après votre commande, le temps de la préparer.</p>';
+	echo '</fieldset>';
+}
+add_action( 'woocommerce_after_checkout_billing_form', 'chartier_slot_fields', 20 );
+
+/** Mode d'après les données envoyées : « retrait » ou « livraison ». */
+function chartier_slot_mode_from_data( $data ) {
+	$methods = isset( $data['shipping_method'] ) ? (array) $data['shipping_method'] : array();
+	return chartier_is_pickup_method( reset( $methods ) ) ? 'retrait' : 'livraison';
+}
+
+/** Jour et créneau obligatoires, existants et encore ouverts. */
+function chartier_slot_validate( $data, $errors ) {
+	$mode = chartier_slot_mode_from_data( $data );
+	$date = isset( $_POST['chartier_slot_date'] ) ? sanitize_text_field( wp_unslash( $_POST['chartier_slot_date'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce vérifié par WooCommerce.
+	$slot = isset( $_POST[ 'chartier_slot_' . $mode ] ) ? sanitize_text_field( wp_unslash( $_POST[ 'chartier_slot_' . $mode ] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+
+	if ( ! array_key_exists( $date, chartier_slot_days() ) ) {
+		$errors->add( 'chartier_slot_date', '<strong>Jour</strong> : choisissez le jour de votre ' . $mode . '.' );
+		return;
+	}
+	if ( ! in_array( $slot, chartier_slots( $mode ), true ) ) {
+		$errors->add( 'chartier_slot', '<strong>Créneau</strong> : choisissez un créneau de ' . $mode . '.' );
+		return;
+	}
+	if ( ! chartier_slot_is_open( $date, $slot ) ) {
+		$errors->add( 'chartier_slot', '<strong>Créneau</strong> : ce créneau commence trop tôt pour préparer votre commande, choisissez-en un plus tard.' );
+	}
+}
+add_action( 'woocommerce_after_checkout_validation', 'chartier_slot_validate', 10, 2 );
+
+/** Enregistrement dans la commande (champs cachés, préfixés par « _ »). */
+function chartier_slot_save( $order, $data ) {
+	$mode = chartier_slot_mode_from_data( $data );
+	// phpcs:disable WordPress.Security.NonceVerification.Missing -- déjà validé ci-dessus.
+	$order->update_meta_data( '_chartier_slot_mode', $mode );
+	$order->update_meta_data( '_chartier_slot_date', sanitize_text_field( wp_unslash( $_POST['chartier_slot_date'] ?? '' ) ) );
+	$order->update_meta_data( '_chartier_slot', sanitize_text_field( wp_unslash( $_POST[ 'chartier_slot_' . $mode ] ?? '' ) ) );
+	// phpcs:enable
+}
+add_action( 'woocommerce_checkout_create_order', 'chartier_slot_save', 10, 2 );
+
+/** « Retrait prévu le vendredi 23 octobre, 12h30–13h30 » (vide si la commande n'a pas de créneau). */
+function chartier_order_slot_text( $order ) {
+	if ( ! $order instanceof WC_Order || ! $order->get_meta( '_chartier_slot' ) ) {
+		return '';
+	}
+	$jour = DateTimeImmutable::createFromFormat( 'Y-m-d', $order->get_meta( '_chartier_slot_date' ), wp_timezone() );
+	return sprintf(
+		'%s le %s, %s',
+		'retrait' === $order->get_meta( '_chartier_slot_mode' ) ? 'Retrait prévu' : 'Livraison prévue',
+		$jour ? wp_date( 'l j F', $jour->getTimestamp() ) : '',
+		chartier_slot_label( $order->get_meta( '_chartier_slot' ) )
+	);
+}
+
+/** Confirmation et Mon compte › Commande (même gabarit « détails de la commande »). */
+function chartier_order_slot_summary( $order ) {
+	$texte = chartier_order_slot_text( $order );
+	if ( $texte ) {
+		echo '<p class="delivery-slot-summary">' . esc_html( $texte ) . '</p>';
+	}
+}
+add_action( 'woocommerce_order_details_before_order_table', 'chartier_order_slot_summary' );
+
+/** E-mails : au-dessus du tableau de la commande (client et restaurant). */
+function chartier_email_slot( $order, $sent_to_admin, $plain_text ) {
+	$texte = chartier_order_slot_text( $order );
+	if ( ! $texte ) {
+		return;
+	}
+	if ( $plain_text ) {
+		echo "\n" . esc_html( strtoupper( $texte ) ) . "\n\n";
+		return;
+	}
+	echo '<p style="margin:0 0 16px;padding:12px 16px;border:2px dashed #9B9493;font-weight:600;">' . esc_html( $texte ) . '</p>';
+}
+add_action( 'woocommerce_email_before_order_table', 'chartier_email_slot', 4, 3 );
+
+/** Back-office : sous l'adresse de livraison de la commande. */
+function chartier_admin_order_slot( $order ) {
+	$texte = chartier_order_slot_text( $order );
+	if ( $texte ) {
+		echo '<p><strong>Créneau :</strong><br>' . esc_html( $texte ) . '</p>';
+	}
+}
+add_action( 'woocommerce_admin_order_data_after_shipping_address', 'chartier_admin_order_slot' );
+
+/** Facture PDF (IT-17) : une ligne de plus dans les données de la commande. */
+function chartier_invoice_slot( $type, $order ) {
+	$texte = chartier_order_slot_text( $order );
+	if ( 'invoice' === $type && $texte ) {
+		list( $titre, $valeur ) = explode( ' le ', $texte, 2 );
+		echo '<tr class="delivery-slot"><th>' . esc_html( $titre ) . ' :</th><td>' . esc_html( $valeur ) . '</td></tr>';
+	}
+}
+add_action( 'wpo_wcpdf_after_order_data', 'chartier_invoice_slot', 10, 2 );
+
+/** Script du bloc « Quand ? » (après celui de l'IT-6 qui pose la classe is-pickup). */
+function chartier_enqueue_slot_script() {
+	if ( function_exists( 'is_checkout' ) && is_checkout() && ! is_order_received_page() ) {
+		wp_enqueue_script( 'chartier-creneaux', get_stylesheet_directory_uri() . '/assets/js/creneaux.js', array( 'jquery', 'chartier-commande' ), wp_get_theme()->get( 'Version' ), true );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'chartier_enqueue_slot_script' );
 
